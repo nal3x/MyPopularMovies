@@ -1,8 +1,10 @@
-package com.nalex.mypopularmovies;
+package com.nalex.mypopularmovies.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
+
+import com.nalex.mypopularmovies.R;
 
 public class MainActivity extends AppCompatActivity {
 
