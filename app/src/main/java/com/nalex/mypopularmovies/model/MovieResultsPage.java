@@ -3,7 +3,7 @@ package com.nalex.mypopularmovies.model;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
-public class Page {
+public class MovieResultsPage {
 
     @SerializedName("page")
     private int page;
