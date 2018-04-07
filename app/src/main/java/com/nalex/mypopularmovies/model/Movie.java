@@ -1,10 +1,15 @@
 package com.nalex.mypopularmovies.model;
 
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
 import java.util.List;
 
-public class Movie {
+public class Movie implements Parcelable {
 
     @SerializedName("vote_count")
     private int voteCount;
@@ -34,6 +39,36 @@ public class Movie {
     private String overview;
     @SerializedName("release_date")
     private String releaseDate;
+
+    //TODO include List of Integer genreIDs to the parcel
+
+    private Movie(Parcel in) {
+        voteCount = in.readInt();
+        id = in.readInt();
+        video = in.readByte() != 0;
+        voteAverage = in.readFloat();
+        title = in.readString();
+        popularity = in.readFloat();
+        posterPath = in.readString();
+        originalLanguage = in.readString();
+        originalTitle = in.readString();
+        backdropPath = in.readString();
+        adult = in.readByte() != 0;
+        overview = in.readString();
+        releaseDate = in.readString();
+    }
+
+    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
+        @Override
+        public Movie createFromParcel(Parcel in) {
+            return new Movie(in);
+        }
+
+        @Override
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
 
     public int getVoteCount() {
         return voteCount;
@@ -147,4 +182,25 @@ public class Movie {
         this.releaseDate = releaseDate;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(voteCount);
+        dest.writeInt(id);
+        dest.writeByte((byte) (video ? 1 : 0));
+        dest.writeFloat(voteAverage);
+        dest.writeString(title);
+        dest.writeFloat(popularity);
+        dest.writeString(posterPath);
+        dest.writeString(originalLanguage);
+        dest.writeString(originalTitle);
+        dest.writeString(backdropPath);
+        dest.writeByte((byte) (adult ? 1 : 0));
+        dest.writeString(overview);
+        dest.writeString(releaseDate);
+    }
 }

@@ -1,9 +1,11 @@
 package com.nalex.mypopularmovies.activity;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,14 +25,13 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
+
+    //TODO: Implement a Loading indicator (Polish)
 
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static String SORT_BY_POPULARITY_KEY = "POP";
     private final static String SORT_BY_RATING_KEY = "RATE";
-
-    //creating the retrofit instance and getting instance of the interface
-    MovieDbService movieDbService = NetworkUtils.getMovieDbService();
 
     private RecyclerView recyclerView;
 
@@ -38,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Toolbar myToolbar = findViewById(R.id.main_toolbar);
+        setSupportActionBar(myToolbar);
 
         recyclerView = findViewById(R.id.rv_movies);
 
@@ -48,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.mainactivity_menu, menu);
+        inflater.inflate(R.menu.main, menu);
         return true;
     }
 
@@ -74,11 +78,11 @@ public class MainActivity extends AppCompatActivity {
 
         MovieDbService movieDbService = NetworkUtils.getMovieDbService();
         Call<MovieResultsPage> call;
-        String apiKey = getString(R.string.THEMOVIEDB_API_KEY);
 
+        String apiKey = getString(R.string.THEMOVIEDB_API_KEY);
         int numberOfColumns = getResources().getInteger(R.integer.num_of_cols);
 
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this,numberOfColumns);
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, numberOfColumns);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
 
@@ -99,10 +103,11 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<MovieResultsPage>() {
             @Override
             public void onResponse(Call<MovieResultsPage> call, Response<MovieResultsPage> response) {
-                if (response.body() != null) {
+                if (null != response.body().getResults()) {
                     List<Movie> moviesList = new ArrayList<>(response.body().getResults());
                     Log.d(TAG, "Checking 1st movie title" + moviesList.get(0).getTitle());
-                    MovieAdapter adapter = new MovieAdapter((ArrayList)moviesList);
+                    MovieAdapter adapter = new MovieAdapter(MainActivity.this,
+                            MainActivity.this, (ArrayList)moviesList);
                     recyclerView.setAdapter(adapter);
                 }
             }
@@ -112,5 +117,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    public void onClick(Movie movie) {
+
+        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+        intent.putExtra("Movie", movie);
+        startActivity(intent);
+        //Toast.makeText(this, "Clicked: " + movie.getTitle(), Toast.LENGTH_SHORT).show();
     }
 }

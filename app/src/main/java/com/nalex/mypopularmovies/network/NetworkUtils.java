@@ -25,7 +25,7 @@ public final class NetworkUtils {
 
     private static final String BASE_URL_FOR_POSTERS = "http://image.tmdb.org/t/p/";
     private static final String BASE_URL_FOR_MOVIES = "https://api.themoviedb.org/3/";
-    private static final String PROPOSED_IMAGE_WIDTH = "w500";
+    private static final String PROPOSED_IMAGE_WIDTH = "w185";
 
     /* Services creates a Retrofit instance and generate
      * an implementation of the corresponding retrofit

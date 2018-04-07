@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.model.Movie;
@@ -19,10 +20,25 @@ import java.util.ArrayList;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
-    private ArrayList<Movie> movieList;
+    private ArrayList<Movie> mMovieList;
 
-    public MovieAdapter(ArrayList<Movie> movieList) {
-        this.movieList = movieList;
+    private final Context mContext;
+
+    final private MovieAdapterOnClickHandler mClickHandler;
+
+    /*
+     * The interface that receives onClick messages.
+     */
+
+    public interface MovieAdapterOnClickHandler {
+        void onClick(Movie movie);
+    }
+
+
+    public MovieAdapter(@NonNull Context context, MovieAdapterOnClickHandler clickHandler, ArrayList<Movie> movieList) {
+        mContext = context;
+        this.mMovieList = movieList;
+        mClickHandler = clickHandler;
     }
 
     @NonNull
@@ -46,24 +62,32 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public int getItemCount() {
-        return movieList.size();
+        return mMovieList.size();
     }
 
-    class MovieViewHolder extends RecyclerView.ViewHolder {
+    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        ImageView movieItemImageView;
+        final ImageView movieItemImageView;
 
-        public MovieViewHolder (View itemView) {
+        MovieViewHolder (View itemView) {
             super(itemView);
             movieItemImageView = itemView.findViewById(R.id.iv_movie_poster);
+            itemView.setOnClickListener(this);
         }
 
         void bindPoster (int index) {
-            Movie movie = movieList.get(index);
+            Movie movie = mMovieList.get(index);
             String relativePath = movie.getPosterPath();
             URL imageURL = NetworkUtils.buildImageUrl(relativePath);
-            Picasso.get().load(imageURL.toString()).into(movieItemImageView);
+            if (null != imageURL.toString())
+                Picasso.get().load(imageURL.toString()).into(movieItemImageView);
         }
 
+        @Override
+        public void onClick(View v) {
+            int adapterPosition = getAdapterPosition();
+            Movie selectedMovie = mMovieList.get(adapterPosition);
+            mClickHandler.onClick(selectedMovie);
+        }
     }
 }
