@@ -8,14 +8,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.model.Movie;
+import com.nalex.mypopularmovies.network.NetworkUtils;
+import com.squareup.picasso.Picasso;
+
+import java.net.URL;
 
 public class DetailActivity extends AppCompatActivity {
 
     private Movie mMovie;
+
+//    TODO: Data Binding
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -28,17 +35,42 @@ public class DetailActivity extends AppCompatActivity {
 
         final ActionBar supportActionBar = getSupportActionBar();
 
-        if (null != supportActionBar)
+        if (null != supportActionBar) {
             supportActionBar.setDisplayHomeAsUpEnabled(true);
+            supportActionBar.setTitle(R.string.detail_activity_title);
+        }
 
 
         Intent intent = getIntent();
         mMovie = intent.getParcelableExtra("Movie");
 
-        supportActionBar.setTitle(mMovie.getTitle());
-
         TextView movieTitleTextView = findViewById(R.id.movie_title_tv);
         movieTitleTextView.setText(mMovie.getTitle());
+
+        ImageView moviePoster = findViewById(R.id.movie_poster_iv);
+        String relativePath = mMovie.getPosterPath();
+        URL imageURL = NetworkUtils.buildImageUrl(relativePath);
+        if (null != imageURL.toString())
+            Picasso.get().load(imageURL.toString()).into(moviePoster);
+
+        TextView releasedDate = findViewById(R.id.release_date_tv);
+        releasedDate.setText(getYearReleased(mMovie.getReleaseDate()));
+
+        TextView voteAverageView = findViewById(R.id.vote_average_tv);
+        String voteAverage = Float.toString(mMovie.getVoteAverage());
+        voteAverageView.setText(formatVoteAverage(voteAverage));
+
+        TextView totalVotes = findViewById(R.id.total_votes_tv);
+        String votesString = getString(R.string.votes_string);
+        String voteCount = Integer.toString(mMovie.getVoteCount());
+        totalVotes.setText(voteCount + votesString);
+
+        TextView originalTitle = findViewById(R.id.original_title_tv);
+        originalTitle.setText(getString(R.string.original_title)  + "\n" + mMovie.getOriginalTitle());
+
+        TextView movieDescription = findViewById(R.id.movie_description_tv);
+        movieDescription.setText(mMovie.getOverview());
+
 
     }
 
@@ -78,5 +110,13 @@ public class DetailActivity extends AppCompatActivity {
     // Sets new share Intent.
     private void changeShareIntent(Intent shareIntent) {
 
+    }
+
+    private String getYearReleased (String dateReleased) {
+        return dateReleased.substring(0, 4);
+    }
+
+    private String formatVoteAverage (String voteAverage) {
+        return voteAverage + "/10.0";
     }
 }

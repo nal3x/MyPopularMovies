@@ -28,6 +28,7 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
 
     //TODO: Implement a Loading indicator (Polish)
+    //TODO: ScrollListener to load more pages and cache results
 
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static String SORT_BY_POPULARITY_KEY = "POP";
@@ -125,6 +126,5 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra("Movie", movie);
         startActivity(intent);
-        //Toast.makeText(this, "Clicked: " + movie.getTitle(), Toast.LENGTH_SHORT).show();
     }
 }

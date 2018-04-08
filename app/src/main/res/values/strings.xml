@@ -1,8 +1,11 @@
 <resources>
-    <string name="app_name">MyPopularMovies</string>
+    <string name="app_name">mPopularMovies</string>
     <string name="sort_by_popularity">Popular movies</string>
     <string name="sort_by_rating">Top-rated Movies</string>
-    <string name="movie_poster">Poster</string>
-    <string name="share_movie_item_menu">Share</string>
+    <string name="movie_poster">Movie Poster</string>
     <string name="share_menu_item_title">share</string>
+    <string name="detail_activity_title">Movie Details</string>
+    <string name="votes_string">votes</string>
+    <string name="original_title">Original Title:</string>
+    <string name="divider_description">Divider</string>
 </resources>

@@ -3,19 +3,9 @@ package com.nalex.mypopularmovies.network;
 import android.net.Uri;
 import android.util.Log;
 
-import com.nalex.mypopularmovies.R;
-import com.nalex.mypopularmovies.model.Movie;
-import com.nalex.mypopularmovies.model.MovieResultsPage;
-
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
