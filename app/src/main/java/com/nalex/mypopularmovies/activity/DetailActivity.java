@@ -1,17 +1,24 @@
 package com.nalex.mypopularmovies.activity;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
+import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
+import com.nalex.mypopularmovies.data.FavoriteMoviesDbHelper;
 import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.network.NetworkUtils;
 import com.squareup.picasso.Picasso;
@@ -20,9 +27,9 @@ import java.net.URL;
 
 public class DetailActivity extends AppCompatActivity {
 
+    public final static String DETAIL_ACTIVITY_INTENT_KEY = "MOVIE_DETAILS";
     private Movie mMovie;
-
-//    TODO: Data Binding
+    private SQLiteDatabase mDb;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,7 +49,9 @@ public class DetailActivity extends AppCompatActivity {
 
 
         Intent intent = getIntent();
-        mMovie = intent.getParcelableExtra("Movie");
+        mMovie = intent.getParcelableExtra(DETAIL_ACTIVITY_INTENT_KEY);
+
+        //    TODO: Data Binding or use ButterKnife
 
         TextView movieTitleTextView = findViewById(R.id.movie_title_tv);
         movieTitleTextView.setText(mMovie.getTitle());
@@ -63,7 +72,7 @@ public class DetailActivity extends AppCompatActivity {
         TextView totalVotes = findViewById(R.id.total_votes_tv);
         String votesString = getString(R.string.votes_string);
         String voteCount = Integer.toString(mMovie.getVoteCount());
-        totalVotes.setText(voteCount + votesString);
+        totalVotes.setText(voteCount + " "+ votesString);
 
         TextView originalTitle = findViewById(R.id.original_title_tv);
         originalTitle.setText(getString(R.string.original_title)  + "\n" + mMovie.getOriginalTitle());
@@ -71,6 +80,19 @@ public class DetailActivity extends AppCompatActivity {
         TextView movieDescription = findViewById(R.id.movie_description_tv);
         movieDescription.setText(mMovie.getOverview());
 
+        FavoriteMoviesDbHelper dbHelper = new FavoriteMoviesDbHelper(this);
+
+        mDb = dbHelper.getWritableDatabase();
+
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                long addedElements = addMovie();
+                Toast.makeText(getApplicationContext(), "Added: " + addedElements, Toast.LENGTH_SHORT).show();
+            }
+        });
 
     }
 
@@ -118,5 +140,19 @@ public class DetailActivity extends AppCompatActivity {
 
     private String formatVoteAverage (String voteAverage) {
         return voteAverage + "/10.0";
+    }
+
+    private long addMovie() {
+        ContentValues cv = new ContentValues();
+        cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID, mMovie.getId());
+        cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE, mMovie.getTitle());
+        cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_POSTER, mMovie.getPosterPath());
+        cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
+        cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE, mMovie.getVoteAverage());
+        cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_COUNT, mMovie.getVoteCount());
+        cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE, mMovie.getOriginalTitle());
+        cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_OVERVIEW, mMovie.getOverview());
+
+        return mDb.insert(FavoriteMoviesContract.MovieEntry.TABLE_NAME, null, cv);
     }
 }

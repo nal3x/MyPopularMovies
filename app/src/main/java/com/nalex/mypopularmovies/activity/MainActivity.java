@@ -1,6 +1,8 @@
 package com.nalex.mypopularmovies.activity;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -13,6 +15,8 @@ import android.view.MenuItem;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.adapter.MovieAdapter;
+import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
+import com.nalex.mypopularmovies.data.FavoriteMoviesDbHelper;
 import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.model.MovieResultsPage;
 import com.nalex.mypopularmovies.network.MovieDbService;
@@ -31,10 +35,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     //TODO: ScrollListener to load more pages and cache results
 
     private final static String TAG = MainActivity.class.getSimpleName();
-    private final static String SORT_BY_POPULARITY_KEY = "POP";
-    private final static String SORT_BY_RATING_KEY = "RATE";
+    private final static String SORT_BY_POPULARITY_KEY = "SORT_BY_POPULARITY";
+    private final static String SORT_BY_RATING_KEY = "SORT_BY_RATING";
 
     private RecyclerView recyclerView;
+    private List<Movie> mMoviesList;
+    private MovieAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +52,14 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         recyclerView = findViewById(R.id.rv_movies);
 
-        getMovieData(SORT_BY_POPULARITY_KEY);
+        mMoviesList = new ArrayList<>();
 
+        adapter = new MovieAdapter(MainActivity.this,
+                MainActivity.this, (ArrayList)mMoviesList);
+
+        recyclerView.setAdapter(adapter);
+
+        getMovieData(SORT_BY_POPULARITY_KEY);
 
     }
     @Override
@@ -67,6 +79,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             }
             case R.id.sort_by_rating: {
                 getMovieData(SORT_BY_RATING_KEY);
+                return true;
+            }
+            case R.id.watchlist: {
+                loadWatchList();
                 return true;
             }
             default:
@@ -105,11 +121,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             @Override
             public void onResponse(Call<MovieResultsPage> call, Response<MovieResultsPage> response) {
                 if (null != response.body().getResults()) {
-                    List<Movie> moviesList = new ArrayList<>(response.body().getResults());
-                    Log.d(TAG, "Checking 1st movie title" + moviesList.get(0).getTitle());
-                    MovieAdapter adapter = new MovieAdapter(MainActivity.this,
-                            MainActivity.this, (ArrayList)moviesList);
-                    recyclerView.setAdapter(adapter);
+                    mMoviesList.clear();
+                    mMoviesList.addAll(response.body().getResults());
+                    adapter.notifyDataSetChanged();
+                    Log.d(TAG, "Checking 1st movie title" + mMoviesList.get(0).getTitle());
                 }
             }
             @Override
@@ -124,7 +139,40 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     public void onClick(Movie movie) {
 
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-        intent.putExtra("Movie", movie);
+        intent.putExtra(DetailActivity.DETAIL_ACTIVITY_INTENT_KEY, movie);
         startActivity(intent);
+    }
+
+    private void loadWatchList () {
+
+        mMoviesList.clear();
+
+        FavoriteMoviesDbHelper dbHelper = new FavoriteMoviesDbHelper(this);
+
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        try (Cursor cursor = db.query(FavoriteMoviesContract.MovieEntry.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                FavoriteMoviesContract.MovieEntry.COLUMN_TITLE)) {
+            while (cursor.moveToNext()) {
+                int movieId = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID));
+                String movieTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE));
+                String moviePoster = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_POSTER));
+                String movieReleaseDate = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_RELEASE_DATE));
+                float movieVoteAverage = cursor.getFloat(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE));
+                int movieVoteCount = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_COUNT));
+                String movieOriginalTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
+                String movieOverview = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_OVERVIEW));
+
+                Movie movieToAdd = new Movie(movieId, movieTitle, moviePoster, movieReleaseDate, movieVoteAverage, movieVoteCount,
+                            movieOriginalTitle, movieOverview);
+                mMoviesList.add(movieToAdd);
+            }
+        }
+        adapter.notifyDataSetChanged();
     }
 }

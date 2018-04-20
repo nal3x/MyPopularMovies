@@ -13,4 +13,10 @@
         android:title="@string/sort_by_rating"
         app:showAsAction="never">
     </item>
+
+    <item
+        android:id="@+id/watchlist"
+        android:title="@string/watchlist"
+        app:showAsAction="never">
+        </item>
 </menu>

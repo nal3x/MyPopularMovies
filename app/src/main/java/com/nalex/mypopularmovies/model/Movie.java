@@ -40,6 +40,17 @@ public class Movie implements Parcelable {
 
     //TODO include List of Integer genreIDs to the parcel
 
+    public Movie(int id, String title, String posterPath, String releaseDate, float voteAverage, int voteCount, String originalTitle, String overview) {
+        this.id = id;
+        this.title = title;
+        this.posterPath = posterPath;
+        this.releaseDate = releaseDate;
+        this.voteAverage = voteAverage;
+        this.voteCount = voteCount;
+        this.originalTitle = originalTitle;
+        this.overview = overview;
+    }
+
     private Movie(Parcel in) {
         voteCount = in.readInt();
         id = in.readInt();
