@@ -25,67 +25,58 @@ import com.squareup.picasso.Picasso;
 
 import java.net.URL;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class DetailActivity extends AppCompatActivity {
 
     public final static String DETAIL_ACTIVITY_INTENT_KEY = "MOVIE_DETAILS";
     private Movie mMovie;
     private SQLiteDatabase mDb;
 
+    @BindView(R.id.movie_title_tv) TextView movieTitleTextView;
+    @BindView(R.id.movie_poster_iv) ImageView moviePoster;
+    @BindView(R.id.vote_average_tv) TextView voteAverageView;
+    @BindView(R.id.total_votes_tv) TextView totalVotes;
+    @BindView(R.id.original_title_tv) TextView originalTitle;
+    @BindView(R.id.movie_description_tv) TextView movieDescription;
+    @BindView(R.id.fab) FloatingActionButton fab;
+    @BindView(R.id.detail_toolbar) Toolbar myToolbar;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_detail);
+        ButterKnife.bind(this);
 
-        Toolbar myToolbar = findViewById(R.id.detail_toolbar);
         setSupportActionBar(myToolbar);
-
         final ActionBar supportActionBar = getSupportActionBar();
-
         if (null != supportActionBar) {
             supportActionBar.setDisplayHomeAsUpEnabled(true);
             supportActionBar.setTitle(R.string.detail_activity_title);
         }
 
-
         Intent intent = getIntent();
         mMovie = intent.getParcelableExtra(DETAIL_ACTIVITY_INTENT_KEY);
 
-        //    TODO: Data Binding or use ButterKnife
-
-        TextView movieTitleTextView = findViewById(R.id.movie_title_tv);
         movieTitleTextView.setText(mMovie.getTitle());
-
-        ImageView moviePoster = findViewById(R.id.movie_poster_iv);
         String relativePath = mMovie.getPosterPath();
         URL imageURL = NetworkUtils.buildImageUrl(relativePath);
         if (null != imageURL.toString())
             Picasso.get().load(imageURL.toString()).into(moviePoster);
-
         TextView releasedDate = findViewById(R.id.release_date_tv);
         releasedDate.setText(getYearReleased(mMovie.getReleaseDate()));
-
-        TextView voteAverageView = findViewById(R.id.vote_average_tv);
         String voteAverage = Float.toString(mMovie.getVoteAverage());
         voteAverageView.setText(formatVoteAverage(voteAverage));
-
-        TextView totalVotes = findViewById(R.id.total_votes_tv);
         String votesString = getString(R.string.votes_string);
         String voteCount = Integer.toString(mMovie.getVoteCount());
         totalVotes.setText(voteCount + " "+ votesString);
-
-        TextView originalTitle = findViewById(R.id.original_title_tv);
         originalTitle.setText(getString(R.string.original_title)  + "\n" + mMovie.getOriginalTitle());
-
-        TextView movieDescription = findViewById(R.id.movie_description_tv);
         movieDescription.setText(mMovie.getOverview());
 
         FavoriteMoviesDbHelper dbHelper = new FavoriteMoviesDbHelper(this);
-
         mDb = dbHelper.getWritableDatabase();
 
-
-        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

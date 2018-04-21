@@ -25,6 +25,10 @@ import com.nalex.mypopularmovies.network.NetworkUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindInt;
+import butterknife.BindString;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,20 +41,21 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static String SORT_BY_POPULARITY_KEY = "SORT_BY_POPULARITY";
     private final static String SORT_BY_RATING_KEY = "SORT_BY_RATING";
-
-    private RecyclerView recyclerView;
     private List<Movie> mMoviesList;
     private MovieAdapter adapter;
+
+    @BindView(R.id.main_toolbar) Toolbar myToolbar;
+    @BindView(R.id.rv_movies) RecyclerView recyclerView;
+    @BindString(R.string.THEMOVIEDB_API_KEY) String apiKey;
+    @BindInt(R.integer.num_of_cols) int numberOfColumns;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-        Toolbar myToolbar = findViewById(R.id.main_toolbar);
         setSupportActionBar(myToolbar);
-
-        recyclerView = findViewById(R.id.rv_movies);
 
         mMoviesList = new ArrayList<>();
 
@@ -59,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         recyclerView.setAdapter(adapter);
 
-        getMovieData(SORT_BY_POPULARITY_KEY);
+        getMovieDataFromInternet(SORT_BY_POPULARITY_KEY);
 
     }
     @Override
@@ -74,11 +79,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         int id = item.getItemId();
         switch (id) {
             case R.id.sort_by_popularity: {
-                getMovieData(SORT_BY_POPULARITY_KEY);
+                getMovieDataFromInternet(SORT_BY_POPULARITY_KEY);
                 return true;
             }
             case R.id.sort_by_rating: {
-                getMovieData(SORT_BY_RATING_KEY);
+                getMovieDataFromInternet(SORT_BY_RATING_KEY);
                 return true;
             }
             case R.id.watchlist: {
@@ -91,13 +96,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     }
 
-    private void getMovieData(String sortCriteria) {
+    private void getMovieDataFromInternet(String sortCriteria) {
 
         MovieDbService movieDbService = NetworkUtils.getMovieDbService();
         Call<MovieResultsPage> call;
-
-        String apiKey = getString(R.string.THEMOVIEDB_API_KEY);
-        int numberOfColumns = getResources().getInteger(R.integer.num_of_cols);
 
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, numberOfColumns);
         recyclerView.setLayoutManager(layoutManager);
@@ -106,12 +108,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         switch (sortCriteria) {
             case SORT_BY_POPULARITY_KEY: {
                 call = movieDbService.getPopularMovies(apiKey);
-                Log.d(TAG, "URL called: " + call.request().url() + "");
+                myToolbar.setTitle(R.string.sort_by_popularity);
             }
             break;
             case SORT_BY_RATING_KEY: {
                 call = movieDbService.getTopRatedMovies(apiKey);
-                Log.d(TAG, "URL called: " + call.request().url() + "");
+                myToolbar.setTitle(R.string.sort_by_rating);
             }
             break;
             default: call = movieDbService.getPopularMovies(apiKey);
@@ -137,7 +139,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     @Override
     public void onClick(Movie movie) {
-
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra(DetailActivity.DETAIL_ACTIVITY_INTENT_KEY, movie);
         startActivity(intent);
@@ -146,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private void loadWatchList () {
 
         mMoviesList.clear();
+        myToolbar.setTitle(R.string.watchlist);
 
         FavoriteMoviesDbHelper dbHelper = new FavoriteMoviesDbHelper(this);
 
@@ -157,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 null,
                 null,
                 null,
-                FavoriteMoviesContract.MovieEntry.COLUMN_TITLE)) {
+                null)) { //should order by reverse time added to watchlist
             while (cursor.moveToNext()) {
                 int movieId = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID));
                 String movieTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE));

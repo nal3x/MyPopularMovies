@@ -20,15 +20,10 @@ import java.util.ArrayList;
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
     private ArrayList<Movie> mMovieList;
-
     private final Context mContext;
-
     final private MovieAdapterOnClickHandler mClickHandler;
 
-    /*
-     * The interface that receives onClick messages.
-     */
-
+    //The interface that receives onClick messages
     public interface MovieAdapterOnClickHandler {
         void onClick(Movie movie);
     }

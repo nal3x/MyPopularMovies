@@ -4,7 +4,7 @@ def noKeyFound = '"NO_KEY_FOUND"'
 def theMovieDbApiKey = noKeyFound
 
 def sensitiveDataFile = file('../sensitive_data.txt')
-def Properties sensitiveData = new Properties()
+Properties sensitiveData = new Properties()
 
 if (sensitiveDataFile.canRead()) {
     sensitiveData.load(new FileInputStream(sensitiveDataFile)) 
@@ -61,5 +61,9 @@ dependencies {
     //Retrofit
     compile 'com.squareup.retrofit2:retrofit:2.4.0'
     compile 'com.squareup.retrofit2:converter-gson:2.4.0'
+
+    //Butterknife
+    compile 'com.jakewharton:butterknife:8.8.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 
 }
