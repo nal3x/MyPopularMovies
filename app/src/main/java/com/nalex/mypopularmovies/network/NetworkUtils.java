@@ -49,7 +49,6 @@ public final class NetworkUtils {
                 .build();
         try {
             URL imageQueryURL = new URL(imageQueryUri.toString());
-            Log.d(TAG, "Image URL: " + imageQueryURL);
             return imageQueryURL;
         }catch (MalformedURLException e) {
             e.printStackTrace();

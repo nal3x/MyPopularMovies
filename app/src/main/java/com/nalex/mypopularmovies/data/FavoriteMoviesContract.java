@@ -19,6 +19,7 @@ public class FavoriteMoviesContract {
         public static final String COLUMN_VOTE_COUNT = "voteCount";
         public static final String COLUMN_ORIGINAL_TITLE = "originalTitle";
         public static final String COLUMN_OVERVIEW = "overview";
+        public static final String COLUMN_TIME_ADDED = "timeAdded";
 
     }
 }

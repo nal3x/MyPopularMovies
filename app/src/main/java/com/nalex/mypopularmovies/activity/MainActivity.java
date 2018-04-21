@@ -126,11 +126,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                     mMoviesList.clear();
                     mMoviesList.addAll(response.body().getResults());
                     adapter.notifyDataSetChanged();
-                    Log.d(TAG, "Checking 1st movie title" + mMoviesList.get(0).getTitle());
                 }
             }
             @Override
             public void onFailure(Call<MovieResultsPage> call, Throwable t) {
+                //TODO: Notify user that fetching data has failed
                 Log.d(TAG, "Failed to Fetch data, check List contents for null");
             }
         });
@@ -153,13 +153,19 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
+        //Recently added movies go first, can give users a preference with this String
+        String sortOrder =
+                FavoriteMoviesContract.MovieEntry.COLUMN_TIME_ADDED + " DESC";
+
+        //try with resources
         try (Cursor cursor = db.query(FavoriteMoviesContract.MovieEntry.TABLE_NAME,
                 null,
                 null,
                 null,
                 null,
                 null,
-                null)) { //should order by reverse time added to watchlist
+                sortOrder )) {
+
             while (cursor.moveToNext()) {
                 int movieId = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID));
                 String movieTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE));

@@ -32,8 +32,8 @@ public class FavoriteMoviesDbHelper extends SQLiteOpenHelper {
                 MovieEntry.COLUMN_VOTE_AVERAGE   + " REAL NOT NULL, " +
                 MovieEntry.COLUMN_VOTE_COUNT     + " INTEGER NOT NULL, " +
                 MovieEntry.COLUMN_ORIGINAL_TITLE + " TEXT NOT NULL, " +
-                MovieEntry.COLUMN_OVERVIEW    + " TEXT NOT NULL);";
-
+                MovieEntry.COLUMN_OVERVIEW       + " TEXT NOT NULL, " +
+                MovieEntry.COLUMN_TIME_ADDED     + " DATETIME DEFAULT CURRENT_TIMESTAMP);";
         db.execSQL(CREATE_TABLE);
     }
 
