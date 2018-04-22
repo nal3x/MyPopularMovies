@@ -2,7 +2,6 @@ package com.nalex.mypopularmovies.activity;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -16,7 +15,6 @@ import android.view.MenuItem;
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.adapter.MovieAdapter;
 import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
-import com.nalex.mypopularmovies.data.FavoriteMoviesDbHelper;
 import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.model.MovieResultsPage;
 import com.nalex.mypopularmovies.network.MovieDbService;
@@ -149,22 +147,16 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mMoviesList.clear();
         myToolbar.setTitle(R.string.watchlist);
 
-        FavoriteMoviesDbHelper dbHelper = new FavoriteMoviesDbHelper(this);
-
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
         //Recently added movies go first, can give users a preference with this String
         String sortOrder =
                 FavoriteMoviesContract.MovieEntry.COLUMN_TIME_ADDED + " DESC";
 
-        //try with resources
-        try (Cursor cursor = db.query(FavoriteMoviesContract.MovieEntry.TABLE_NAME,
+        //try with resources to close cursor
+        try (Cursor cursor = getContentResolver().query(FavoriteMoviesContract.MovieEntry.CONTENT_URI,
                 null,
                 null,
                 null,
-                null,
-                null,
-                sortOrder )) {
+                sortOrder)) {
 
             while (cursor.moveToNext()) {
                 int movieId = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID));

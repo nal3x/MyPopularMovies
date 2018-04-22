@@ -11,7 +11,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.NoActionBar">
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:launchMode="singleTop">
 
         <activity android:name=".activity.MainActivity">
             <intent-filter>
@@ -24,6 +25,13 @@
         <activity android:name=".activity.DetailActivity"
             android:parentActivityName=".activity.MainActivity"
             />
+
+        <!-- exported = false limits access to this ContentProvider to only this app -->
+        <provider
+            android:name="com.nalex.mypopularmovies.data.FavoriteMoviesContentProvider"
+            android:authorities="com.nalex.mypopularmovies"
+            android:exported="false"/>
+
 
     </application>
 

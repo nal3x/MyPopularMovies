@@ -3,12 +3,16 @@ package com.nalex.mypopularmovies.activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,7 +22,6 @@ import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
-import com.nalex.mypopularmovies.data.FavoriteMoviesDbHelper;
 import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.network.NetworkUtils;
 import com.squareup.picasso.Picasso;
@@ -33,15 +36,26 @@ public class DetailActivity extends AppCompatActivity {
     public final static String DETAIL_ACTIVITY_INTENT_KEY = "MOVIE_DETAILS";
     private Movie mMovie;
     private SQLiteDatabase mDb;
+    private String TAG = DetailActivity.class.getSimpleName();
 
-    @BindView(R.id.movie_title_tv) TextView movieTitleTextView;
-    @BindView(R.id.movie_poster_iv) ImageView moviePoster;
-    @BindView(R.id.vote_average_tv) TextView voteAverageView;
-    @BindView(R.id.total_votes_tv) TextView totalVotes;
-    @BindView(R.id.original_title_tv) TextView originalTitle;
-    @BindView(R.id.movie_description_tv) TextView movieDescription;
-    @BindView(R.id.fab) FloatingActionButton fab;
-    @BindView(R.id.detail_toolbar) Toolbar myToolbar;
+    @BindView(R.id.movie_title_tv)
+    TextView movieTitleTextView;
+    @BindView(R.id.movie_poster_iv)
+    ImageView moviePoster;
+    @BindView(R.id.vote_average_tv)
+    TextView voteAverageView;
+    @BindView(R.id.total_votes_tv)
+    TextView totalVotes;
+    @BindView(R.id.original_title_tv)
+    TextView originalTitle;
+    @BindView(R.id.movie_description_tv)
+    TextView movieDescription;
+    @BindView(R.id.fab)
+    FloatingActionButton fab;
+    @BindView(R.id.detail_toolbar)
+    Toolbar myToolbar;
+    @BindView(R.id.coordinatorLayout)
+    CoordinatorLayout coordinatorLayout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,23 +79,19 @@ public class DetailActivity extends AppCompatActivity {
         if (null != imageURL.toString())
             Picasso.get().load(imageURL.toString()).into(moviePoster);
         TextView releasedDate = findViewById(R.id.release_date_tv);
-        releasedDate.setText(getYearReleased(mMovie.getReleaseDate()));
+        releasedDate.setText(formatYearReleased(mMovie.getReleaseDate()));
         String voteAverage = Float.toString(mMovie.getVoteAverage());
         voteAverageView.setText(formatVoteAverage(voteAverage));
         String votesString = getString(R.string.votes_string);
         String voteCount = Integer.toString(mMovie.getVoteCount());
-        totalVotes.setText(voteCount + " "+ votesString);
-        originalTitle.setText(getString(R.string.original_title)  + "\n" + mMovie.getOriginalTitle());
+        totalVotes.setText(voteCount + " " + votesString);
+        originalTitle.setText(getString(R.string.original_title) + "\n" + mMovie.getOriginalTitle());
         movieDescription.setText(mMovie.getOverview());
-
-        FavoriteMoviesDbHelper dbHelper = new FavoriteMoviesDbHelper(this);
-        mDb = dbHelper.getWritableDatabase();
-
+        
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                long addedElements = addMovie();
-                Toast.makeText(getApplicationContext(), "Added: " + addedElements, Toast.LENGTH_SHORT).show();
+                addMovieToWatchlist();
             }
         });
 
@@ -125,16 +135,18 @@ public class DetailActivity extends AppCompatActivity {
 
     }
 
-    private String getYearReleased (String dateReleased) {
+    private String formatYearReleased(String dateReleased) {
         return dateReleased.substring(0, 4);
     }
 
-    private String formatVoteAverage (String voteAverage) {
+    private String formatVoteAverage(String voteAverage) {
         return voteAverage + "/10.0";
     }
 
-    private long addMovie() {
+    private void addMovieToWatchlist() {
+
         ContentValues cv = new ContentValues();
+
         cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID, mMovie.getId());
         cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE, mMovie.getTitle());
         cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_POSTER, mMovie.getPosterPath());
@@ -144,6 +156,26 @@ public class DetailActivity extends AppCompatActivity {
         cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE, mMovie.getOriginalTitle());
         cv.put(FavoriteMoviesContract.MovieEntry.COLUMN_OVERVIEW, mMovie.getOverview());
 
-        return mDb.insert(FavoriteMoviesContract.MovieEntry.TABLE_NAME, null, cv);
+        Uri uri = getContentResolver().insert(FavoriteMoviesContract.MovieEntry.CONTENT_URI, cv);
+
+        if (uri != null) {
+            Log.d(TAG, uri.toString());
+            Snackbar.make(coordinatorLayout, R.string.snackbar_success_insert_text, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.snackbar_action_undo, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Toast.makeText(getBaseContext(),
+                                    "Implement delete based on uri returned ;)",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .show();
+        }
+        else {
+            Snackbar.make(coordinatorLayout, R.string.snackbar_failed_insert_text, Snackbar.LENGTH_LONG)
+                    .show();
+        }
     }
+
+
 }

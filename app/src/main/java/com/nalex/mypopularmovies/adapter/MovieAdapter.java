@@ -28,7 +28,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         void onClick(Movie movie);
     }
 
-
     public MovieAdapter(@NonNull Context context, MovieAdapterOnClickHandler clickHandler, ArrayList<Movie> movieList) {
         mContext = context;
         this.mMovieList = movieList;
