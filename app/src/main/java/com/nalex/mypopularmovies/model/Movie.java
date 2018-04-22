@@ -38,6 +38,16 @@ public class Movie implements Parcelable {
     @SerializedName("release_date")
     private String releaseDate;
 
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    private boolean selected;
+
     //TODO include List of Integer genreIDs to the parcel
 
     public Movie(int id, String title, String posterPath, String releaseDate, float voteAverage, int voteCount, String originalTitle, String overview) {

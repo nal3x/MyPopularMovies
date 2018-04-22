@@ -8,8 +8,15 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/movie_poster"
         android:adjustViewBounds="true"
-        android:scaleType="centerCrop" />
+        android:scaleType="centerCrop"
+        android:foreground="?android:selectableItemBackground"/>
 
+    <View
+        android:id="@+id/selected_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/selected_overlay"
+        android:visibility="invisible" />
 
 </FrameLayout>
 

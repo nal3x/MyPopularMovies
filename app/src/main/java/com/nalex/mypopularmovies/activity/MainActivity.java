@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.adapter.MovieAdapter;
@@ -31,7 +32,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
+public class MainActivity extends AppCompatActivity implements
+        MovieAdapter.MovieAdapterOnClickHandler, MovieAdapter.MovieAdapterOnLongClickHandler {
 
     //TODO: Implement a Loading indicator (Polish)
     //TODO: ScrollListener to load more pages and cache results
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private final static String SORT_BY_RATING_KEY = "SORT_BY_RATING";
     private List<Movie> mMoviesList;
     private MovieAdapter adapter;
+    private boolean stateSelected;
 
     @BindView(R.id.main_toolbar) Toolbar myToolbar;
     @BindView(R.id.rv_movies) RecyclerView recyclerView;
@@ -58,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mMoviesList = new ArrayList<>();
 
         adapter = new MovieAdapter(MainActivity.this,
-                MainActivity.this, (ArrayList)mMoviesList);
+                MainActivity.this, this, (ArrayList)mMoviesList);
 
         recyclerView.setAdapter(adapter);
 
@@ -175,4 +178,24 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         }
         adapter.notifyDataSetChanged();
     }
+
+    @Override
+    public void onLongClick(Movie movie) {
+        if(movie.isSelected()) {
+            movie.setSelected(false);
+        }
+        else
+            movie.setSelected(true);
+
+        for (Movie m : mMoviesList) {
+            if (m.isSelected()) {
+                stateSelected = true;
+                break;
+            }
+            stateSelected = false;
+        }
+        String state = "State: " + stateSelected;
+        Toast.makeText(this, state, Toast.LENGTH_SHORT).show();
+    }
+
 }

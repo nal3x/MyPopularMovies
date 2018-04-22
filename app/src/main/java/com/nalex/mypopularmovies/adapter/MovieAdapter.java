@@ -1,6 +1,5 @@
 package com.nalex.mypopularmovies.adapter;
 
-
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -22,16 +21,26 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     private ArrayList<Movie> mMovieList;
     private final Context mContext;
     final private MovieAdapterOnClickHandler mClickHandler;
+    final private MovieAdapterOnLongClickHandler mLongClickHandler;
 
     //The interface that receives onClick messages
     public interface MovieAdapterOnClickHandler {
         void onClick(Movie movie);
     }
 
-    public MovieAdapter(@NonNull Context context, MovieAdapterOnClickHandler clickHandler, ArrayList<Movie> movieList) {
+    public interface MovieAdapterOnLongClickHandler {
+        void onLongClick(Movie movie);
+    }
+
+    public MovieAdapter(@NonNull Context context,
+                        MovieAdapterOnClickHandler clickHandler,
+                        MovieAdapterOnLongClickHandler longClickHandler,
+                        ArrayList<Movie> movieList) {
         mContext = context;
-        this.mMovieList = movieList;
         mClickHandler = clickHandler;
+        mLongClickHandler = longClickHandler;
+        this.mMovieList = movieList;
+
     }
 
     @NonNull
@@ -59,14 +68,18 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         return mMovieList.size();
     }
 
-    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
         final ImageView movieItemImageView;
+        final View movieSelectedOverlay;
 
         MovieViewHolder (View itemView) {
             super(itemView);
             movieItemImageView = itemView.findViewById(R.id.iv_movie_poster);
+            movieSelectedOverlay = itemView.findViewById(R.id.selected_overlay);
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
         }
 
         void bindPoster (int index) {
@@ -75,6 +88,11 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             URL imageURL = NetworkUtils.buildImageUrl(relativePath);
             if (null != imageURL.toString())
                 Picasso.get().load(imageURL.toString()).into(movieItemImageView);
+            if (movie.isSelected()) {
+                movieSelectedOverlay.setVisibility(View.VISIBLE);
+            } else
+                movieSelectedOverlay.setVisibility(View.INVISIBLE);
+
         }
 
         @Override
@@ -82,6 +100,15 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             int adapterPosition = getAdapterPosition();
             Movie selectedMovie = mMovieList.get(adapterPosition);
             mClickHandler.onClick(selectedMovie);
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            int adapterPosition = getAdapterPosition();
+            Movie selectedMovie = mMovieList.get(adapterPosition);
+            mLongClickHandler.onLongClick(selectedMovie);
+            notifyDataSetChanged();
+            return true;
         }
     }
 }
