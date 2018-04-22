@@ -32,8 +32,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements
-        MovieAdapter.MovieAdapterOnClickHandler, MovieAdapter.MovieAdapterOnLongClickHandler {
+public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler,
+        MovieAdapter.MovieAdapterOnLongClickHandler {
 
     //TODO: Implement a Loading indicator (Polish)
     //TODO: ScrollListener to load more pages and cache results
@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements
     private final static String SORT_BY_RATING_KEY = "SORT_BY_RATING";
     private List<Movie> mMoviesList;
     private MovieAdapter adapter;
-    private boolean stateSelected;
 
     @BindView(R.id.main_toolbar) Toolbar myToolbar;
     @BindView(R.id.rv_movies) RecyclerView recyclerView;
@@ -64,6 +63,10 @@ public class MainActivity extends AppCompatActivity implements
                 MainActivity.this, this, (ArrayList)mMoviesList);
 
         recyclerView.setAdapter(adapter);
+
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, numberOfColumns);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setHasFixedSize(true);
 
         getMovieDataFromInternet(SORT_BY_POPULARITY_KEY);
 
@@ -88,23 +91,18 @@ public class MainActivity extends AppCompatActivity implements
                 return true;
             }
             case R.id.watchlist: {
-                loadWatchList();
-                return true;
+                Intent intent = new Intent(MainActivity.this, WatchlistActivity.class);
+                startActivity(intent);
             }
             default:
                 return super.onOptionsItemSelected(item);
         }
-
     }
 
     private void getMovieDataFromInternet(String sortCriteria) {
 
         MovieDbService movieDbService = NetworkUtils.getMovieDbService();
         Call<MovieResultsPage> call;
-
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, numberOfColumns);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setHasFixedSize(true);
 
         switch (sortCriteria) {
             case SORT_BY_POPULARITY_KEY: {
@@ -138,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
+
+
     @Override
     public void onClick(Movie movie) {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
@@ -145,57 +145,9 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(intent);
     }
 
-    private void loadWatchList () {
-
-        mMoviesList.clear();
-        myToolbar.setTitle(R.string.watchlist);
-
-        //Recently added movies go first, can give users a preference with this String
-        String sortOrder =
-                FavoriteMoviesContract.MovieEntry.COLUMN_TIME_ADDED + " DESC";
-
-        //try with resources to close cursor
-        try (Cursor cursor = getContentResolver().query(FavoriteMoviesContract.MovieEntry.CONTENT_URI,
-                null,
-                null,
-                null,
-                sortOrder)) {
-
-            while (cursor.moveToNext()) {
-                int movieId = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID));
-                String movieTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE));
-                String moviePoster = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_POSTER));
-                String movieReleaseDate = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_RELEASE_DATE));
-                float movieVoteAverage = cursor.getFloat(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE));
-                int movieVoteCount = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_COUNT));
-                String movieOriginalTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
-                String movieOverview = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_OVERVIEW));
-
-                Movie movieToAdd = new Movie(movieId, movieTitle, moviePoster, movieReleaseDate, movieVoteAverage, movieVoteCount,
-                            movieOriginalTitle, movieOverview);
-                mMoviesList.add(movieToAdd);
-            }
-        }
-        adapter.notifyDataSetChanged();
-    }
 
     @Override
     public void onLongClick(Movie movie) {
-        if(movie.isSelected()) {
-            movie.setSelected(false);
-        }
-        else
-            movie.setSelected(true);
-
-        for (Movie m : mMoviesList) {
-            if (m.isSelected()) {
-                stateSelected = true;
-                break;
-            }
-            stateSelected = false;
-        }
-        String state = "State: " + stateSelected;
-        Toast.makeText(this, state, Toast.LENGTH_SHORT).show();
+        return;
     }
-
 }

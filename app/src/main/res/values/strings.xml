@@ -12,4 +12,7 @@
     <string name="snackbar_action_undo">UNDO</string>
     <string name="snackbar_failed_insert_text">Allready in Watchlist</string>
     <string name="snackbar_success_insert_text">Added to Watchlist</string>
+    <string name="clearWatchlist">Clear Watchlist</string>
+    <string name="sortWatchlistRecent">Recently added</string>
+    <string name="sortWatchlistRating">Highest rating</string>
 </resources>
