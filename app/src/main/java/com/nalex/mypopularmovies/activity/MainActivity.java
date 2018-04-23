@@ -1,7 +1,10 @@
 package com.nalex.mypopularmovies.activity;
 
 import android.content.Intent;
-import android.database.Cursor;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -11,11 +14,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.adapter.MovieAdapter;
-import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
 import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.model.MovieResultsPage;
 import com.nalex.mypopularmovies.network.MovieDbService;
@@ -44,8 +45,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private List<Movie> mMoviesList;
     private MovieAdapter adapter;
 
+
     @BindView(R.id.main_toolbar) Toolbar myToolbar;
     @BindView(R.id.rv_movies) RecyclerView recyclerView;
+    @BindView(R.id.drawer_layout) DrawerLayout mDrawerLayout;
+    @BindView(R.id.nav_view) NavigationView navigationView;
     @BindString(R.string.THEMOVIEDB_API_KEY) String apiKey;
     @BindInt(R.integer.num_of_cols) int numberOfColumns;
 
@@ -54,8 +58,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
         setSupportActionBar(myToolbar);
+        ActionBar actionbar = getSupportActionBar();
+        actionbar.setDisplayHomeAsUpEnabled(true);
+        actionbar.setHomeAsUpIndicator(R.drawable.ic_menu_white_24px);
+
 
         mMoviesList = new ArrayList<>();
 
@@ -70,29 +77,55 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         getMovieDataFromInternet(SORT_BY_POPULARITY_KEY);
 
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                        // set item as selected to persist highlight
+                        menuItem.setChecked(false);
+                        // close drawer when item is tapped
+                        mDrawerLayout.closeDrawers();
+
+                        // Add code here to update the UI based on the item selected
+                        // For example, swap UI fragments here
+
+                        int id = menuItem.getItemId();
+                        switch (id) {
+                            case R.id.sort_by_popularity: {
+                                getMovieDataFromInternet(SORT_BY_POPULARITY_KEY);
+
+                                return true;
+                            }
+                            case R.id.sort_by_rating: {
+                                getMovieDataFromInternet(SORT_BY_RATING_KEY);
+                                return true;
+                            }
+                            case R.id.watchlist: {
+                                Intent intent = new Intent(MainActivity.this, WatchlistActivity.class);
+                                startActivity(intent);
+                                return true;
+                            }
+                        }
+                        return true;
+                    }
+                });
     }
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main, menu);
-        return true;
-    }
+
+
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        MenuInflater inflater = getMenuInflater();
+//        inflater.inflate(R.menu.main, menu);
+//        return true;
+//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
-            case R.id.sort_by_popularity: {
-                getMovieDataFromInternet(SORT_BY_POPULARITY_KEY);
+            case android.R.id.home: {
+                mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
-            }
-            case R.id.sort_by_rating: {
-                getMovieDataFromInternet(SORT_BY_RATING_KEY);
-                return true;
-            }
-            case R.id.watchlist: {
-                Intent intent = new Intent(MainActivity.this, WatchlistActivity.class);
-                startActivity(intent);
             }
             default:
                 return super.onOptionsItemSelected(item);
