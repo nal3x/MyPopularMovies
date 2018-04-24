@@ -25,4 +25,25 @@ public interface MovieDbService {
     @GET("configuration")
     Call<Configuration> getConfiguration(@Query("api_key")String apiKey);
 
+    @GET("movie/popular")
+    Call<MovieResultsPage> getPopularMovies(@Query("api_key")String apiKey, @Query("page") int page);
+
+    @GET("movie/top_rated")
+    Call<MovieResultsPage> getTopRatedMovies(@Query("api_key")String apiKey, @Query("page") int page);
+
+    @GET("movie/now_playing")
+    Call<MovieResultsPage> getNowPlayingMovies(@Query("api_key")String apiKey,
+                                               @Query("page") int page,
+                                               @Query("region") String region);
+
+    @GET("movie/upcoming")
+    Call<MovieResultsPage> getUpcomingMovies(@Query("api_key")String apiKey,
+                                               @Query("page") int page,
+                                               @Query("region") String region);
+
+
+
+
+
+
 }

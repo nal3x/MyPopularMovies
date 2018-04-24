@@ -11,8 +11,6 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import com.nalex.mypopularmovies.R;
@@ -37,14 +35,18 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         MovieAdapter.MovieAdapterOnLongClickHandler {
 
     //TODO: Implement a Loading indicator (Polish)
-    //TODO: ScrollListener to load more pages and cache results
 
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static String SORT_BY_POPULARITY_KEY = "SORT_BY_POPULARITY";
     private final static String SORT_BY_RATING_KEY = "SORT_BY_RATING";
     private List<Movie> mMoviesList;
+    private int mLastPageLoaded; //assigned by the results fetched, used to inform the rv listener
     private MovieAdapter adapter;
-
+    private String mMovieSortingCriteria;
+    //members used for RV scroll listener
+    private int previousTotal;
+    private boolean loading;
+    private int visibleThreshold;
 
     @BindView(R.id.main_toolbar) Toolbar myToolbar;
     @BindView(R.id.rv_movies) RecyclerView recyclerView;
@@ -63,19 +65,47 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         actionbar.setDisplayHomeAsUpEnabled(true);
         actionbar.setHomeAsUpIndicator(R.drawable.ic_menu_white_24px);
 
-
         mMoviesList = new ArrayList<>();
 
         adapter = new MovieAdapter(MainActivity.this,
                 MainActivity.this, this, (ArrayList)mMoviesList);
 
         recyclerView.setAdapter(adapter);
-
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, numberOfColumns);
+        final GridLayoutManager layoutManager = new GridLayoutManager(this, numberOfColumns);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
 
-        getMovieDataFromInternet(SORT_BY_POPULARITY_KEY);
+        //init: fetch most popular movies page 1
+        initializeScroll();
+        mMovieSortingCriteria = SORT_BY_POPULARITY_KEY;
+        getMovieDataFromInternet(mMovieSortingCriteria, 1);
+        myToolbar.setTitle(R.string.sort_by_popularity);
+
+
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                int visibleItemCount = recyclerView.getChildCount();
+                int totalItemCount = layoutManager.getItemCount();
+                int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
+
+                if (loading) {
+                    if (totalItemCount > previousTotal) {
+                        loading = false;
+                        previousTotal = totalItemCount;
+                    }
+                }
+                if (!loading && (totalItemCount - visibleItemCount)
+                        <= (firstVisibleItem + visibleThreshold)) {
+                    //load next page of the same endpoint ;)
+                    getMovieDataFromInternet(mMovieSortingCriteria, mLastPageLoaded + 1);
+                    loading = true;
+                }
+            }
+        });
 
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
@@ -86,18 +116,24 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                         // close drawer when item is tapped
                         mDrawerLayout.closeDrawers();
 
-                        // Add code here to update the UI based on the item selected
-                        // For example, swap UI fragments here
-
                         int id = menuItem.getItemId();
                         switch (id) {
                             case R.id.sort_by_popularity: {
-                                getMovieDataFromInternet(SORT_BY_POPULARITY_KEY);
-
+                                //whenever we switch the endpoint the list must get cleared
+                                //and we return to the first page of results
+                                mMoviesList.clear();
+                                myToolbar.setTitle(R.string.sort_by_popularity);
+                                mMovieSortingCriteria = SORT_BY_POPULARITY_KEY;
+                                initializeScroll();
+                                getMovieDataFromInternet(mMovieSortingCriteria, 1);
                                 return true;
                             }
                             case R.id.sort_by_rating: {
-                                getMovieDataFromInternet(SORT_BY_RATING_KEY);
+                                mMoviesList.clear();
+                                myToolbar.setTitle(R.string.sort_by_rating);
+                                mMovieSortingCriteria = SORT_BY_RATING_KEY;
+                                initializeScroll();
+                                getMovieDataFromInternet(mMovieSortingCriteria, 1);
                                 return true;
                             }
                             case R.id.watchlist: {
@@ -112,13 +148,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     }
 
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.main, menu);
-//        return true;
-//    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -132,20 +161,18 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         }
     }
 
-    private void getMovieDataFromInternet(String sortCriteria) {
+    private void getMovieDataFromInternet(String sortCriteria, int requestPage) {
 
         MovieDbService movieDbService = NetworkUtils.getMovieDbService();
         Call<MovieResultsPage> call;
 
         switch (sortCriteria) {
             case SORT_BY_POPULARITY_KEY: {
-                call = movieDbService.getPopularMovies(apiKey);
-                myToolbar.setTitle(R.string.sort_by_popularity);
+                call = movieDbService.getPopularMovies(apiKey, requestPage);
             }
             break;
             case SORT_BY_RATING_KEY: {
-                call = movieDbService.getTopRatedMovies(apiKey);
-                myToolbar.setTitle(R.string.sort_by_rating);
+                call = movieDbService.getTopRatedMovies(apiKey, requestPage);
             }
             break;
             default: call = movieDbService.getPopularMovies(apiKey);
@@ -154,8 +181,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         call.enqueue(new Callback<MovieResultsPage>() {
             @Override
             public void onResponse(Call<MovieResultsPage> call, Response<MovieResultsPage> response) {
-                if (null != response.body().getResults()) {
-                    mMoviesList.clear();
+                if (null != response.body()) {
+                    mLastPageLoaded = response.body().getPage();
                     mMoviesList.addAll(response.body().getResults());
                     adapter.notifyDataSetChanged();
                 }
@@ -183,4 +210,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     public void onLongClick(Movie movie) {
         return;
     }
+
+    private void initializeScroll () {
+        previousTotal = 0;
+        loading = true;
+        visibleThreshold = 100;
+    }
+
 }
+

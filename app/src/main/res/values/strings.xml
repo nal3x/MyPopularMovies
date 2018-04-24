@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Moviespotting</string>
+    <string name="app_name">this.MovieExplorer</string>
     <string name="sort_by_popularity">Popular movies</string>
     <string name="sort_by_rating">Top-rated Movies</string>
     <string name="movie_poster">Movie Poster</string>
@@ -15,5 +15,5 @@
     <string name="clearWatchlist">Clear Watchlist</string>
     <string name="sortWatchlistRecent">Recently added</string>
     <string name="sortWatchlistRating">Highest rating</string>
-    <string name="nav_header_title">Moviespotting</string>
+    <string name="nav_header_title">this.MovieExplorer</string>
 </resources>
