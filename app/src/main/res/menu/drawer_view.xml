@@ -5,6 +5,10 @@
         android:id="@+id/menu_top"
         android:checkableBehavior="single">
         <item
+            android:id="@+id/show_now_playing"
+            android:title="@string/now_playing"
+            />
+        <item
             android:id="@+id/sort_by_popularity"
             android:title="@string/sort_by_popularity">
         </item>
@@ -12,6 +16,10 @@
         <item
             android:id="@+id/sort_by_rating"
             android:title="@string/sort_by_rating">
+        </item>
+        <item
+            android:id="@+id/show_upcoming"
+            android:title="@string/upcoming">
         </item>
 
     </group>

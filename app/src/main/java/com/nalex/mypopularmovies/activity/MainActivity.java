@@ -34,11 +34,15 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler,
         MovieAdapter.MovieAdapterOnLongClickHandler {
 
-    //TODO: Implement a Loading indicator (Polish)
+    //TODO: Implement a Loading indicator or indicate that there is no data connection
 
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static String SORT_BY_POPULARITY_KEY = "SORT_BY_POPULARITY";
     private final static String SORT_BY_RATING_KEY = "SORT_BY_RATING";
+    private final static String SHOW_UPCOMING_IN_THEATERS_KEY = "UPCOMING_MOVIES";
+    private final static String SHOW_NOW_PLAYING_IN_THEATERS_KEY = "IN_THEATERS";
+    private final static String DEFAULT_REGION = "GR"; //should normally be found in preferences...
+    //TODO: provide list of country codes for now playing/upcoming movies
     private List<Movie> mMoviesList;
     private int mLastPageLoaded; //assigned by the results fetched, used to inform the rv listener
     private MovieAdapter adapter;
@@ -78,9 +82,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         //init: fetch most popular movies page 1
         initializeScroll();
         mMovieSortingCriteria = SORT_BY_POPULARITY_KEY;
-        getMovieDataFromInternet(mMovieSortingCriteria, 1);
+        getMovieDataFromInternet(mMovieSortingCriteria, 1, null);
         myToolbar.setTitle(R.string.sort_by_popularity);
-
 
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -101,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 if (!loading && (totalItemCount - visibleItemCount)
                         <= (firstVisibleItem + visibleThreshold)) {
                     //load next page of the same endpoint ;)
-                    getMovieDataFromInternet(mMovieSortingCriteria, mLastPageLoaded + 1);
+                    getMovieDataFromInternet(mMovieSortingCriteria, mLastPageLoaded + 1, DEFAULT_REGION);
                     loading = true;
                 }
             }
@@ -118,6 +121,14 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
                         int id = menuItem.getItemId();
                         switch (id) {
+                            case R.id.show_now_playing: {
+                                mMoviesList.clear();
+                                myToolbar.setTitle(R.string.now_playing);
+                                mMovieSortingCriteria = SHOW_NOW_PLAYING_IN_THEATERS_KEY;
+                                initializeScroll();
+                                getMovieDataFromInternet(mMovieSortingCriteria,1, DEFAULT_REGION);
+                                return true;
+                            }
                             case R.id.sort_by_popularity: {
                                 //whenever we switch the endpoint the list must get cleared
                                 //and we return to the first page of results
@@ -125,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                                 myToolbar.setTitle(R.string.sort_by_popularity);
                                 mMovieSortingCriteria = SORT_BY_POPULARITY_KEY;
                                 initializeScroll();
-                                getMovieDataFromInternet(mMovieSortingCriteria, 1);
+                                getMovieDataFromInternet(mMovieSortingCriteria, 1, null);
                                 return true;
                             }
                             case R.id.sort_by_rating: {
@@ -133,7 +144,15 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                                 myToolbar.setTitle(R.string.sort_by_rating);
                                 mMovieSortingCriteria = SORT_BY_RATING_KEY;
                                 initializeScroll();
-                                getMovieDataFromInternet(mMovieSortingCriteria, 1);
+                                getMovieDataFromInternet(mMovieSortingCriteria, 1, null);
+                                return true;
+                            }
+                            case R.id.show_upcoming: {
+                                mMoviesList.clear();
+                                myToolbar.setTitle(R.string.upcoming);
+                                mMovieSortingCriteria = SHOW_UPCOMING_IN_THEATERS_KEY;
+                                initializeScroll();
+                                getMovieDataFromInternet(mMovieSortingCriteria, 1, DEFAULT_REGION);
                                 return true;
                             }
                             case R.id.watchlist: {
@@ -161,18 +180,26 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         }
     }
 
-    private void getMovieDataFromInternet(String sortCriteria, int requestPage) {
+    private void getMovieDataFromInternet(String sortCriteria, int requestPage, String region) {
 
         MovieDbService movieDbService = NetworkUtils.getMovieDbService();
         Call<MovieResultsPage> call;
 
         switch (sortCriteria) {
+            case SHOW_NOW_PLAYING_IN_THEATERS_KEY: {
+                call = movieDbService.getNowPlayingMovies(apiKey, requestPage, region);
+            }
+            break;
             case SORT_BY_POPULARITY_KEY: {
                 call = movieDbService.getPopularMovies(apiKey, requestPage);
             }
             break;
             case SORT_BY_RATING_KEY: {
                 call = movieDbService.getTopRatedMovies(apiKey, requestPage);
+            }
+            break;
+            case SHOW_UPCOMING_IN_THEATERS_KEY: {
+                call = movieDbService.getNowPlayingMovies(apiKey, requestPage, region);
             }
             break;
             default: call = movieDbService.getPopularMovies(apiKey);
@@ -196,15 +223,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     }
 
-
-
     @Override
     public void onClick(Movie movie) {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra(DetailActivity.DETAIL_ACTIVITY_INTENT_KEY, movie);
         startActivity(intent);
     }
-
 
     @Override
     public void onLongClick(Movie movie) {
