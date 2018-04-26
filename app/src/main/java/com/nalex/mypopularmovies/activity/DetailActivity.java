@@ -23,39 +23,44 @@ import android.widget.Toast;
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
 import com.nalex.mypopularmovies.model.Movie;
+import com.nalex.mypopularmovies.model.MovieReviewResult;
+import com.nalex.mypopularmovies.model.MovieReviews;
+import com.nalex.mypopularmovies.model.MovieVideoResult;
+import com.nalex.mypopularmovies.model.MovieVideos;
+import com.nalex.mypopularmovies.network.MovieDbService;
 import com.nalex.mypopularmovies.network.NetworkUtils;
 import com.squareup.picasso.Picasso;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
+import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DetailActivity extends AppCompatActivity {
 
     public final static String DETAIL_ACTIVITY_INTENT_KEY = "MOVIE_DETAILS";
+    private final static String TAG = DetailActivity.class.getSimpleName();
     private Movie mMovie;
+    private List<MovieVideoResult> mMovieVideos;
+    private List<MovieReviewResult> mMovieReviews;
     private SQLiteDatabase mDb;
-    private String TAG = DetailActivity.class.getSimpleName();
 
-    @BindView(R.id.movie_title_tv)
-    TextView movieTitleTextView;
-    @BindView(R.id.movie_poster_iv)
-    ImageView moviePoster;
-    @BindView(R.id.vote_average_tv)
-    TextView voteAverageView;
-    @BindView(R.id.total_votes_tv)
-    TextView totalVotes;
-    @BindView(R.id.original_title_tv)
-    TextView originalTitle;
-    @BindView(R.id.movie_description_tv)
-    TextView movieDescription;
-    @BindView(R.id.fab)
-    FloatingActionButton fab;
-    @BindView(R.id.detail_toolbar)
-    Toolbar myToolbar;
-    @BindView(R.id.coordinatorLayout)
-    CoordinatorLayout coordinatorLayout;
+    @BindView(R.id.movie_title_tv) TextView movieTitleTextView;
+    @BindView(R.id.movie_poster_iv) ImageView moviePoster;
+    @BindView(R.id.vote_average_tv) TextView voteAverageView;
+    @BindView(R.id.total_votes_tv) TextView totalVotes;
+    @BindView(R.id.original_title_tv) TextView originalTitle;
+    @BindView(R.id.movie_description_tv) TextView movieDescription;
+    @BindView(R.id.fab) FloatingActionButton fab;
+    @BindView(R.id.detail_toolbar) Toolbar myToolbar;
+    @BindView(R.id.coordinatorLayout) CoordinatorLayout coordinatorLayout;
+    @BindString(R.string.THEMOVIEDB_API_KEY) String apiKey;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,9 +75,12 @@ public class DetailActivity extends AppCompatActivity {
             supportActionBar.setTitle(R.string.detail_activity_title);
         }
 
+
+        //Get Movie parcel from MainActivity
         Intent intent = getIntent();
         mMovie = intent.getParcelableExtra(DETAIL_ACTIVITY_INTENT_KEY);
 
+        //fill Views with data that came from the parcel
         movieTitleTextView.setText(mMovie.getTitle());
         String relativePath = mMovie.getPosterPath();
         URL imageURL = NetworkUtils.buildImageUrl(relativePath);
@@ -87,7 +95,12 @@ public class DetailActivity extends AppCompatActivity {
         totalVotes.setText(voteCount + " " + votesString);
         originalTitle.setText(getString(R.string.original_title) + "\n" + mMovie.getOriginalTitle());
         movieDescription.setText(mMovie.getOverview());
-        
+
+        //Get reviews and videos for this movie using MovieDbService calls
+        getMovieVideosFromInternet(mMovie.getId(), apiKey);
+        getMovieReviewsFromInternet(mMovie.getId(), apiKey);
+
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -96,6 +109,8 @@ public class DetailActivity extends AppCompatActivity {
         });
 
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -177,5 +192,50 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    //Returns a list of videos (MovieVideoResult) for a specific movie ID.
+    private void getMovieVideosFromInternet(int movieId, String apiKey) {
+
+        MovieDbService movieDbService = NetworkUtils.getMovieDbService();
+        Call<MovieVideos> call = movieDbService.getVideosForMovie(movieId, apiKey);
+        call.enqueue(new Callback<MovieVideos>() {
+            @Override
+            public void onResponse(Call<MovieVideos> call, Response<MovieVideos> response) {
+                if (null != response.body()) {
+                    mMovieVideos = new ArrayList<MovieVideoResult>();
+                    for (MovieVideoResult result : response.body().getResults())
+                        mMovieVideos.add(result);
+                }
+            }
+            @Override
+            public void onFailure(Call<MovieVideos> call, Throwable t) {
+                //TODO: Notify user that fetching data has failed
+                Log.d(TAG, "Failed to Fetch data, check List contents for null");
+            }
+        });
+
+    }
+
+    private void getMovieReviewsFromInternet(int movieId, String apiKey) {
+
+        MovieDbService movieDbService = NetworkUtils.getMovieDbService();
+        Call<MovieReviews> call = movieDbService.getReviewsForMovie(movieId, apiKey);
+        call.enqueue(new Callback<MovieReviews>() {
+            @Override
+            public void onResponse(Call<MovieReviews> call, Response<MovieReviews> response) {
+                if (null != response.body()) {
+                    mMovieReviews = new ArrayList<MovieReviewResult>();
+                    for (MovieReviewResult result : response.body().getResults())
+                        mMovieReviews.add(result);
+                    Log.d(TAG, "First review " + mMovieReviews.get(0).getContent());
+                } else Log.d(TAG, "NULL");
+            }
+            @Override
+            public void onFailure(Call<MovieReviews> call, Throwable t) {
+                //TODO: Notify user that fetching data has failed
+                Log.d(TAG, "Failed to Fetch data, check List contents for null");
+            }
+        });
+
+    }
 
 }
