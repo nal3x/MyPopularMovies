@@ -1,10 +1,14 @@
 package com.nalex.mypopularmovies.network;
 
 import com.nalex.mypopularmovies.model.Configuration;
+import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.model.MovieResultsPage;
+import com.nalex.mypopularmovies.model.MovieReviews;
+import com.nalex.mypopularmovies.model.MovieVideos;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface MovieDbService {
@@ -44,6 +48,20 @@ public interface MovieDbService {
     Call<MovieResultsPage> getUpcomingMovies(@Query("api_key")String apiKey,
                                                @Query("page") int page,
                                                @Query("region") String region);
+
+    //method to get videos for a specific movie based on movie ID
+    @GET("movie/{movie_id}/videos")
+    Call<MovieVideos> getVideosForMovie(@Path("movie_id") int movieId, @Query("api_key")String apiKey);
+
+    //method to get reviews for a specific movie based on movie ID
+    @GET("movie/{movie_id}/reviews")
+    Call<MovieReviews> getReviewsForMovie(@Path("movie_id") int movieId, @Query("api_key")String apiKey);
+
+
+
+
+
+
 
 
 
