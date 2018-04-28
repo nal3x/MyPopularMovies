@@ -1,6 +1,8 @@
 package com.nalex.mypopularmovies.activity;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -11,6 +13,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -21,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
+import com.nalex.mypopularmovies.adapter.ReviewsAdapter;
 import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
 import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.model.MovieReviewResult;
@@ -50,6 +55,7 @@ public class DetailActivity extends AppCompatActivity {
     private List<MovieVideoResult> mMovieVideos;
     private List<MovieReviewResult> mMovieReviews;
     private SQLiteDatabase mDb;
+    private ReviewsAdapter reviewsAdapter;
 
     @BindView(R.id.movie_title_tv) TextView movieTitleTextView;
     @BindView(R.id.movie_poster_iv) ImageView moviePoster;
@@ -60,6 +66,7 @@ public class DetailActivity extends AppCompatActivity {
     @BindView(R.id.fab) FloatingActionButton fab;
     @BindView(R.id.detail_toolbar) Toolbar myToolbar;
     @BindView(R.id.coordinatorLayout) CoordinatorLayout coordinatorLayout;
+    @BindView(R.id.reviews_recyclerview) RecyclerView reviewsRecyclerView;
     @BindString(R.string.THEMOVIEDB_API_KEY) String apiKey;
 
     @Override
@@ -96,10 +103,18 @@ public class DetailActivity extends AppCompatActivity {
         originalTitle.setText(getString(R.string.original_title) + "\n" + mMovie.getOriginalTitle());
         movieDescription.setText(mMovie.getOverview());
 
-        //Get reviews and videos for this movie using MovieDbService calls
-        getMovieVideosFromInternet(mMovie.getId(), apiKey);
-        getMovieReviewsFromInternet(mMovie.getId(), apiKey);
 
+        mMovieReviews = new ArrayList<>();
+        reviewsAdapter = new ReviewsAdapter(this, (ArrayList)mMovieReviews);
+        reviewsRecyclerView.setAdapter(reviewsAdapter);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        reviewsRecyclerView.setLayoutManager(layoutManager);
+        reviewsRecyclerView.setHasFixedSize(true);
+
+
+        //Get reviews and videos for this movie using MovieDbService calls
+        //getMovieVideosFromInternet(mMovie.getId(), apiKey);
+        getMovieReviewsFromInternet(mMovie.getId(), apiKey, this);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -205,6 +220,7 @@ public class DetailActivity extends AppCompatActivity {
                     for (MovieVideoResult result : response.body().getResults())
                         mMovieVideos.add(result);
                 }
+//                Log.d(TAG, "First trailer key " + mMovieVideos.get(0).getKey());
             }
             @Override
             public void onFailure(Call<MovieVideos> call, Throwable t) {
@@ -215,7 +231,7 @@ public class DetailActivity extends AppCompatActivity {
 
     }
 
-    private void getMovieReviewsFromInternet(int movieId, String apiKey) {
+    private void getMovieReviewsFromInternet(int movieId, String apiKey, final Context context) {
 
         MovieDbService movieDbService = NetworkUtils.getMovieDbService();
         Call<MovieReviews> call = movieDbService.getReviewsForMovie(movieId, apiKey);
@@ -223,11 +239,12 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<MovieReviews> call, Response<MovieReviews> response) {
                 if (null != response.body()) {
-                    mMovieReviews = new ArrayList<MovieReviewResult>();
-                    for (MovieReviewResult result : response.body().getResults())
-                        mMovieReviews.add(result);
-                    Log.d(TAG, "First review " + mMovieReviews.get(0).getContent());
-                } else Log.d(TAG, "NULL");
+                    mMovieReviews.addAll(response.body().getResults());
+                    for (MovieReviewResult res : mMovieReviews)
+                        Log.d(TAG, res.getAuthor());
+                    reviewsAdapter.notifyDataSetChanged();
+                }
+
             }
             @Override
             public void onFailure(Call<MovieReviews> call, Throwable t) {

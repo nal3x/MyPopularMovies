@@ -1,0 +1,25 @@
+<LinearLayout android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--TODO: set proper size and color for tvs-->
+
+        <TextView
+            android:id="@+id/author_textview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="18dp"
+            android:text="Author author"
+            android:gravity="left"/>
+
+        <TextView
+            android:id="@+id/review_textview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="18dp"
+            android:text="Review review"
+            android:gravity="left"
+            />
+
+    </LinearLayout>

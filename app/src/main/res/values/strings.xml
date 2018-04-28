@@ -20,5 +20,6 @@
     <string name="sortWatchlistRecent">Recently added</string>
     <string name="sortWatchlistRating">Highest rating</string>
     <string name="nav_header_title">this.MovieExplorer</string>
+    <string name="review_by">Review by</string>
 
 </resources>
