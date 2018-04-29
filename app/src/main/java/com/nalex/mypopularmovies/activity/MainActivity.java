@@ -1,6 +1,7 @@
 package com.nalex.mypopularmovies.activity;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -11,10 +12,13 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.adapter.MovieAdapter;
+import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
 import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.model.MovieResultsPage;
 import com.nalex.mypopularmovies.network.MovieDbService;
@@ -40,6 +44,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private final static String SORT_BY_RATING_KEY = "SORT_BY_RATING";
     private final static String SHOW_UPCOMING_IN_THEATERS_KEY = "UPCOMING_MOVIES";
     private final static String SHOW_NOW_PLAYING_IN_THEATERS_KEY = "IN_THEATERS";
+    private final static String SORT_RECENTLY_ADDED = FavoriteMoviesContract.MovieEntry.COLUMN_TIME_ADDED + " DESC";
+    private final static String SORT_BY_RATING = FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE + " DESC";
     private final static String DEFAULT_REGION = "GR"; //should normally be found in preferences...
     //TODO: provide list of country codes for now playing/upcoming movies
     private List<Movie> mMoviesList;
@@ -50,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private int previousTotal;
     private boolean loading;
     private int visibleThreshold;
+    //toggle to show/hide menu options
+    private boolean WatchListMode;
 
     @BindView(R.id.main_toolbar) Toolbar myToolbar;
     @BindView(R.id.rv_movies) RecyclerView recyclerView;
@@ -66,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         setSupportActionBar(myToolbar);
         ActionBar actionbar = getSupportActionBar();
         actionbar.setDisplayHomeAsUpEnabled(true);
+        //setting the menu triple bar icon as home
         actionbar.setHomeAsUpIndicator(R.drawable.ic_menu_white_24px);
 
         mMoviesList = new ArrayList<>();
@@ -79,10 +88,14 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         recyclerView.setHasFixedSize(true);
 
         //initially we fetch most popular movies page 1 and initialize scroll variables
+        //while also hiding the menu
+
+        WatchListMode = false;
         initializeScroll();
         mMovieSortingCriteria = SORT_BY_POPULARITY_KEY;
         getMovieDataFromInternet(mMovieSortingCriteria, 1, null);
         myToolbar.setTitle(R.string.sort_by_popularity);
+
 
         // Lazy loading with scroll listener attached to RecyclerView
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -121,6 +134,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                         int id = menuItem.getItemId();
                         switch (id) {
                             case R.id.show_now_playing: {
+                                WatchListMode = false;
+                                invalidateOptionsMenu();
                                 mMoviesList.clear();
                                 myToolbar.setTitle(R.string.now_playing);
                                 mMovieSortingCriteria = SHOW_NOW_PLAYING_IN_THEATERS_KEY;
@@ -131,6 +146,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                             case R.id.sort_by_popularity: {
                                 //whenever we switch the endpoint the list must get cleared
                                 //and we return to the first page of results
+                                WatchListMode = false;
+                                invalidateOptionsMenu();
                                 mMoviesList.clear();
                                 myToolbar.setTitle(R.string.sort_by_popularity);
                                 mMovieSortingCriteria = SORT_BY_POPULARITY_KEY;
@@ -139,6 +156,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                                 return true;
                             }
                             case R.id.sort_by_rating: {
+                                WatchListMode = false;
+                                invalidateOptionsMenu();
                                 mMoviesList.clear();
                                 myToolbar.setTitle(R.string.sort_by_rating);
                                 mMovieSortingCriteria = SORT_BY_RATING_KEY;
@@ -147,6 +166,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                                 return true;
                             }
                             case R.id.show_upcoming: {
+                                WatchListMode = false;
+                                invalidateOptionsMenu();
                                 mMoviesList.clear();
                                 myToolbar.setTitle(R.string.upcoming);
                                 mMovieSortingCriteria = SHOW_UPCOMING_IN_THEATERS_KEY;
@@ -155,8 +176,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                                 return true;
                             }
                             case R.id.watchlist: {
-                                Intent intent = new Intent(MainActivity.this, WatchlistActivity.class);
-                                startActivity(intent);
+                                WatchListMode = true;
+                                invalidateOptionsMenu();
+                                loadData(SORT_RECENTLY_ADDED);
+                                myToolbar.setTitle(R.string.watchlist);
                                 return true;
                             }
                         }
@@ -174,10 +197,33 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
             }
+            case R.id.sortWatchlistRecent: {
+                loadData(SORT_RECENTLY_ADDED);
+                return true;
+            }
+            case R.id.sortWatchlistRating: {
+                loadData(SORT_BY_RATING);
+                return true;
+            }
+            //TODO: mass delete main R.id.clearWatchlist
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        if (!WatchListMode) {
+            menu.setGroupVisible(R.id.watchlist_group,false);
+        }
+        else
+            menu.setGroupVisible(R.id.watchlist_group,true);
+
+        return true;
+    }
+
 
     private void getMovieDataFromInternet(String sortCriteria, int requestPage, String region) {
 
@@ -233,6 +279,37 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         previousTotal = 0;
         loading = true;
         visibleThreshold = 100;
+    }
+
+    private void loadData(String sortOrder) {
+
+        mMoviesList.clear();
+
+        //try with resources to close cursor
+        try (Cursor cursor = getContentResolver().query(FavoriteMoviesContract.MovieEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                sortOrder)) {
+
+            while (cursor.moveToNext()) {
+                int movieId = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID));
+                String movieTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE));
+                String moviePoster = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_POSTER));
+                String movieReleaseDate = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_RELEASE_DATE));
+                float movieVoteAverage = cursor.getFloat(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE));
+                int movieVoteCount = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_COUNT));
+                String movieOriginalTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
+                String movieOverview = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_OVERVIEW));
+
+                Movie movieToAdd = new Movie(movieId, movieTitle, moviePoster, movieReleaseDate, movieVoteAverage, movieVoteCount,
+                        movieOriginalTitle, movieOverview);
+                mMoviesList.add(movieToAdd);
+            }
+        }
+        adapter.notifyDataSetChanged();
+
+
     }
 
 }
