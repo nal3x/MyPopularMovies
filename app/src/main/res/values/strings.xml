@@ -1,7 +1,9 @@
 <resources>
-    <string name="app_name">mPopularMovies</string>
+    <string name="app_name">MovieSpotting</string>
     <string name="sort_by_popularity">Popular movies</string>
-    <string name="sort_by_rating">Top-rated Movies</string>
+    <string name="sort_by_rating">Top-rated movies</string>
+    <string name="now_playing">Now playing</string>
+    <string name="upcoming">Upcoming</string>
     <string name="movie_poster">Movie Poster</string>
     <string name="share_menu_item_title">share</string>
     <string name="detail_activity_title">Movie Details</string>
@@ -12,4 +14,12 @@
     <string name="snackbar_action_undo">UNDO</string>
     <string name="snackbar_failed_insert_text">Allready in Watchlist</string>
     <string name="snackbar_success_insert_text">Added to Watchlist</string>
+    <string name="clearWatchlist">Clear Watchlist</string>
+    <string name="sortWatchlistRecent">Recently added</string>
+    <string name="sortWatchlistRating">Highest rating</string>
+    <string name="nav_header_title">MovieSpotting</string>
+    <string name="review_by">Review by:</string>
+    <string name="read_more">...</string>
+    <string name="nav_header_subtitle">Choose life. Choose movie.</string>
+
 </resources>

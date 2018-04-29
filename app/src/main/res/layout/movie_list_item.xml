@@ -8,8 +8,8 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/movie_poster"
         android:adjustViewBounds="true"
-        android:scaleType="centerCrop" />
-
+        android:scaleType="centerCrop"
+        android:foreground="?android:selectableItemBackground"/>
 
 </FrameLayout>
 

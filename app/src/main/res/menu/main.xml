@@ -2,21 +2,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item
-        android:id="@+id/sort_by_popularity"
-        android:title="@string/sort_by_popularity"
-        app:showAsAction="never">
-    </item>
+    <group android:id="@+id/watchlist_group">
+        <item
+            android:id="@+id/sortWatchlistRating"
+            android:title="@string/sortWatchlistRating"
+            app:showAsAction="never"></item>
+        <item
+            android:id="@+id/sortWatchlistRecent"
+            android:title="@string/sortWatchlistRecent"
+            app:showAsAction="never"></item>
+        <item
+            android:id="@+id/clearWatchlist"
+            android:title="@string/clearWatchlist"
+            app:showAsAction="never"></item>
+    </group>
 
-    <item
-        android:id="@+id/sort_by_rating"
-        android:title="@string/sort_by_rating"
-        app:showAsAction="never">
-    </item>
-
-    <item
-        android:id="@+id/watchlist"
-        android:title="@string/watchlist"
-        app:showAsAction="never">
-        </item>
 </menu>

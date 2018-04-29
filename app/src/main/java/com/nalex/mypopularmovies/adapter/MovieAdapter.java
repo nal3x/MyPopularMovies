@@ -1,6 +1,5 @@
 package com.nalex.mypopularmovies.adapter;
 
-
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -28,10 +27,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         void onClick(Movie movie);
     }
 
-    public MovieAdapter(@NonNull Context context, MovieAdapterOnClickHandler clickHandler, ArrayList<Movie> movieList) {
+
+    public MovieAdapter(@NonNull Context context,
+                        MovieAdapterOnClickHandler clickHandler,
+                        ArrayList<Movie> movieList) {
         mContext = context;
-        this.mMovieList = movieList;
         mClickHandler = clickHandler;
+        this.mMovieList = movieList;
+
     }
 
     @NonNull
@@ -59,6 +62,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         return mMovieList.size();
     }
 
+
     class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         final ImageView movieItemImageView;
@@ -75,6 +79,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             URL imageURL = NetworkUtils.buildImageUrl(relativePath);
             if (null != imageURL.toString())
                 Picasso.get().load(imageURL.toString()).into(movieItemImageView);
+
         }
 
         @Override
@@ -83,5 +88,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             Movie selectedMovie = mMovieList.get(adapterPosition);
             mClickHandler.onClick(selectedMovie);
         }
+
     }
 }
