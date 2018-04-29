@@ -1,6 +1,5 @@
 package com.nalex.mypopularmovies.activity;
 
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -107,7 +106,7 @@ public class DetailActivity extends AppCompatActivity {
         mMovieReviews = new ArrayList<>();
         reviewsAdapter = new ReviewsAdapter(this, (ArrayList)mMovieReviews);
         reviewsRecyclerView.setAdapter(reviewsAdapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL,false);
         reviewsRecyclerView.setLayoutManager(layoutManager);
         reviewsRecyclerView.setHasFixedSize(true);
 
