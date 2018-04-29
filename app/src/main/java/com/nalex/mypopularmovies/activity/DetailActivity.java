@@ -3,7 +3,6 @@ package com.nalex.mypopularmovies.activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -25,6 +24,7 @@ import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.adapter.ReviewsAdapter;
+import com.nalex.mypopularmovies.adapter.ThumbnailAdapter;
 import com.nalex.mypopularmovies.data.FavoriteMoviesContract;
 import com.nalex.mypopularmovies.model.Movie;
 import com.nalex.mypopularmovies.model.MovieReviewResult;
@@ -53,8 +53,8 @@ public class DetailActivity extends AppCompatActivity {
     private Movie mMovie;
     private List<MovieVideoResult> mMovieVideos;
     private List<MovieReviewResult> mMovieReviews;
-    private SQLiteDatabase mDb;
     private ReviewsAdapter reviewsAdapter;
+    private ThumbnailAdapter thumbnailAdapter;
 
     @BindView(R.id.movie_title_tv) TextView movieTitleTextView;
     @BindView(R.id.movie_poster_iv) ImageView moviePoster;
@@ -66,6 +66,7 @@ public class DetailActivity extends AppCompatActivity {
     @BindView(R.id.detail_toolbar) Toolbar myToolbar;
     @BindView(R.id.coordinatorLayout) CoordinatorLayout coordinatorLayout;
     @BindView(R.id.reviews_recyclerview) RecyclerView reviewsRecyclerView;
+    @BindView(R.id.thumbnails_recyclerview) RecyclerView thumbnailsRecyclerView;
     @BindString(R.string.THEMOVIEDB_API_KEY) String apiKey;
 
     @Override
@@ -103,16 +104,28 @@ public class DetailActivity extends AppCompatActivity {
         movieDescription.setText(mMovie.getOverview());
 
 
+        mMovieVideos = new ArrayList<>();
+        thumbnailAdapter = new ThumbnailAdapter(this, (ArrayList)mMovieVideos);
+        thumbnailsRecyclerView.setAdapter(thumbnailAdapter);
+        LinearLayoutManager thumbnailsLayoutManager = new LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL,
+                false);
+        thumbnailsRecyclerView.setLayoutManager(thumbnailsLayoutManager);
+        thumbnailsRecyclerView.setHasFixedSize(true);
+
+
         mMovieReviews = new ArrayList<>();
         reviewsAdapter = new ReviewsAdapter(this, (ArrayList)mMovieReviews);
         reviewsRecyclerView.setAdapter(reviewsAdapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL,false);
-        reviewsRecyclerView.setLayoutManager(layoutManager);
+        LinearLayoutManager reviewsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL,false);
+        reviewsRecyclerView.setLayoutManager(reviewsLayoutManager);
         reviewsRecyclerView.setHasFixedSize(true);
 
 
+
+
         //Get reviews and videos for this movie using MovieDbService calls
-        //getMovieVideosFromInternet(mMovie.getId(), apiKey);
+        getMovieVideosFromInternet(mMovie.getId(), apiKey);
         getMovieReviewsFromInternet(mMovie.getId(), apiKey, this);
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -123,8 +136,6 @@ public class DetailActivity extends AppCompatActivity {
         });
 
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -207,7 +218,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     //Returns a list of videos (MovieVideoResult) for a specific movie ID.
-    private void getMovieVideosFromInternet(int movieId, String apiKey) {
+    private void getMovieVideosFromInternet(int movieId, final String apiKey) {
 
         MovieDbService movieDbService = NetworkUtils.getMovieDbService();
         Call<MovieVideos> call = movieDbService.getVideosForMovie(movieId, apiKey);
@@ -215,11 +226,13 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<MovieVideos> call, Response<MovieVideos> response) {
                 if (null != response.body()) {
-                    mMovieVideos = new ArrayList<MovieVideoResult>();
-                    for (MovieVideoResult result : response.body().getResults())
-                        mMovieVideos.add(result);
+                    mMovieVideos.addAll(response.body().getResults());
+                    URL url = NetworkUtils.buildYoutubeVideoURL(mMovieVideos.get(0).getKey());
+                    Log.d("FIRST VIDEO URL", url.toString());
+                    URL url2 = NetworkUtils.buildYoutubeThumbnailUrl(mMovieVideos.get(0).getKey());
+                    Log.d("FIRST VIDEO THUMBNAIL", url2.toString());
+                    thumbnailAdapter.notifyDataSetChanged();
                 }
-//                Log.d(TAG, "First trailer key " + mMovieVideos.get(0).getKey());
             }
             @Override
             public void onFailure(Call<MovieVideos> call, Throwable t) {
@@ -239,8 +252,6 @@ public class DetailActivity extends AppCompatActivity {
             public void onResponse(Call<MovieReviews> call, Response<MovieReviews> response) {
                 if (null != response.body()) {
                     mMovieReviews.addAll(response.body().getResults());
-                    for (MovieReviewResult res : mMovieReviews)
-                        Log.d(TAG, res.getAuthor());
                     reviewsAdapter.notifyDataSetChanged();
                 }
 

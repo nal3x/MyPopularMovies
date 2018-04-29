@@ -10,9 +10,10 @@ Android Retrofit 2.0 Tutorial by Navjacinth Mathew
 https://medium.com/@jacinth9/android-retrofit-2-0-tutorial-89de3c714c63
 
 Thanks to LaurenM for helping me solve fit issues of single item ImageView in the GridLayout of the RecyclerView, and for providing me with this hint
-
 https://discussions.udacity.com/t/gridlayoutmanager-recyclerview/499251/4
 
-
-EndlessRecyclerOnScrollListener by ssinss
+EndlessRecyclerOnScrollListener by ssinss:
 https://gist.github.com/ssinss/e06f12ef66c51252563e
+
+For expanding/shrinking the user reviews:
+https://android.jlelse.eu/android-handling-checkbox-state-in-recycler-views-71b03f237022

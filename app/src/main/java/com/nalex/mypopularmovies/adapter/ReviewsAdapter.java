@@ -2,6 +2,7 @@ package com.nalex.mypopularmovies.adapter;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -17,21 +18,16 @@ import java.util.ArrayList;
 
 public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewViewHolder> {
 
-    //TODO: set padding programmaticaly so when review is expanded padding is correct
-
     private ArrayList<MovieReviewResult> mMovieReviewResults;
     private final Context mContext;
-    // sparse boolean array for checking the state of the review(expanded, shrinked)
+    //sparse boolean array for checking the state of the review(expanded, shrinked)
     private SparseBooleanArray reviewStateArray = new SparseBooleanArray();
+    private final static int REVIEW_NUMBER_OF_LINES_SHRINKED = 4;
 
     public ReviewsAdapter(@NonNull Context context,
                           ArrayList<MovieReviewResult> movieReviewResults) {
         mContext = context;
         mMovieReviewResults = movieReviewResults;
-    }
-
-    public interface ReviewsAdapterOnClickHandler {
-        void onClick(MovieReviewResult reviewResult);
     }
 
 
@@ -51,12 +47,12 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewVi
 
     @Override
     public void onBindViewHolder(@NonNull ReviewViewHolder holder, int position) {
-        String author = mContext.getString(R.string.review_by) + " " + mMovieReviewResults.get(position).getAuthor();
+        String author = mMovieReviewResults.get(position).getAuthor();
         holder.authorTextView.setText(author);
         holder.reviewTextView.setText(mMovieReviewResults.get(position).getContent());
 
         if (!reviewStateArray.get(position, false)) {
-            holder.reviewTextView.setMaxLines(4);
+            holder.reviewTextView.setMaxLines(REVIEW_NUMBER_OF_LINES_SHRINKED);
             holder.readMoreTextView.setVisibility(View.VISIBLE);
         }
         else {
@@ -76,13 +72,15 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewVi
         final TextView authorTextView;
         final TextView reviewTextView;
         final TextView readMoreTextView;
+        final CardView reviewCardView;
 
         ReviewViewHolder(View itemView) {
             super(itemView);
             authorTextView = itemView.findViewById(R.id.author_textview);
             reviewTextView = itemView.findViewById(R.id.review_textview);
             readMoreTextView = itemView.findViewById(R.id.review_read_more_tv);
-            reviewTextView.setOnClickListener(this);
+            reviewCardView = itemView.findViewById(R.id.review_cardview);
+            reviewCardView.setOnClickListener(this);
         }
 
 
@@ -96,7 +94,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewVi
             }
             else  {
                 reviewStateArray.put(adapterPosition, false); //Shrinked
-                reviewTextView.setMaxLines(4);
+                reviewTextView.setMaxLines(REVIEW_NUMBER_OF_LINES_SHRINKED);
                 readMoreTextView.setVisibility(View.VISIBLE);
             }
         }
