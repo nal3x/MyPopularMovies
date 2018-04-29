@@ -31,8 +31,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler,
-        MovieAdapter.MovieAdapterOnLongClickHandler {
+public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
 
     //TODO: Implement a Loading indicator or indicate that there is no data connection
 
@@ -72,20 +71,20 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mMoviesList = new ArrayList<>();
 
         adapter = new MovieAdapter(MainActivity.this,
-                MainActivity.this, this, (ArrayList)mMoviesList);
+                MainActivity.this, (ArrayList)mMoviesList);
 
         recyclerView.setAdapter(adapter);
         final GridLayoutManager layoutManager = new GridLayoutManager(this, numberOfColumns);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
 
-        //init: fetch most popular movies page 1
+        //initially we fetch most popular movies page 1 and initialize scroll variables
         initializeScroll();
         mMovieSortingCriteria = SORT_BY_POPULARITY_KEY;
         getMovieDataFromInternet(mMovieSortingCriteria, 1, null);
         myToolbar.setTitle(R.string.sort_by_popularity);
 
-
+        // Lazy loading with scroll listener attached to RecyclerView
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -228,11 +227,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra(DetailActivity.DETAIL_ACTIVITY_INTENT_KEY, movie);
         startActivity(intent);
-    }
-
-    @Override
-    public void onLongClick(Movie movie) {
-        return;
     }
 
     private void initializeScroll () {

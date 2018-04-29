@@ -1,11 +1,9 @@
 <resources>
-    <string name="app_name">this.MovieExplorer</string>
-
+    <string name="app_name">MovieSpotting</string>
     <string name="sort_by_popularity">Popular movies</string>
     <string name="sort_by_rating">Top-rated movies</string>
     <string name="now_playing">Now playing</string>
     <string name="upcoming">Upcoming</string>
-
     <string name="movie_poster">Movie Poster</string>
     <string name="share_menu_item_title">share</string>
     <string name="detail_activity_title">Movie Details</string>

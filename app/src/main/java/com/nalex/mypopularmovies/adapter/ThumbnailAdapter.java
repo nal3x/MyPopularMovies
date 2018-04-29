@@ -3,7 +3,6 @@ package com.nalex.mypopularmovies.adapter;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,14 +16,24 @@ import com.squareup.picasso.Picasso;
 import java.net.URL;
 import java.util.ArrayList;
 
+//TODO: (future work) check if adapter is confused by filtering the utube videos
+
 public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.ThumbnailViewHolder> {
 
     private ArrayList<MovieVideoResult> mVideosList;
     private Context mContext;
+    final private ThumbnailAdapterOnClickHandler mClickHandler;
+
+
+    public interface ThumbnailAdapterOnClickHandler {
+        void onClick(MovieVideoResult movieVideoResult);
+    }
 
     public ThumbnailAdapter(@NonNull Context context,
-                          ArrayList<MovieVideoResult> mVideosList) {
+                            ThumbnailAdapterOnClickHandler clickHandler,
+                            ArrayList<MovieVideoResult> mVideosList) {
         mContext = context;
+        this.mClickHandler = clickHandler;
         this.mVideosList = mVideosList;
     }
 
@@ -48,8 +57,12 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.Thum
         if (site.equalsIgnoreCase("youtube")){
             String videoKey = mVideosList.get(position).getKey();
             URL url = NetworkUtils.buildYoutubeThumbnailUrl(videoKey);
-            if (null != url.toString())
+            if (null != url.toString()) {
                 Picasso.get().load(url.toString()).into(holder.thumbnailImageView);
+//                int resourceId = R.drawable.ic_play_box_outline;
+//                holder.playIconImageView.setImageResource(resourceId);
+                //Picasso.get().load(R.drawable.ic_play_box_outline).into(holder.playIconImageView);
+            }
         }
     }
 
@@ -63,12 +76,22 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.Thum
         return youtubeVideosCount;
     }
 
-    class ThumbnailViewHolder extends RecyclerView.ViewHolder {
+    class ThumbnailViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         final ImageView thumbnailImageView;
+        final ImageView playIconImageView;
 
-        public ThumbnailViewHolder(View itemView) {
+        ThumbnailViewHolder(View itemView) {
             super(itemView);
-            this.thumbnailImageView = itemView.findViewById(R.id.thumbnail_imageview);
+            thumbnailImageView = itemView.findViewById(R.id.thumbnail_imageview);
+            playIconImageView = itemView.findViewById(R.id.play_icon_imageview);
+            itemView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int adapterPosition = getAdapterPosition();
+            MovieVideoResult selectedVideo = mVideosList.get(adapterPosition);
+            mClickHandler.onClick(selectedVideo);
         }
     }
 }

@@ -12,7 +12,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.adapter.MovieAdapter;
@@ -26,8 +25,7 @@ import butterknife.BindInt;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class WatchlistActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler,
-        MovieAdapter.MovieAdapterOnLongClickHandler {
+public class WatchlistActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
 
     //TODO: save state! when device is rotated selected movies are lost :(
 
@@ -54,7 +52,7 @@ public class WatchlistActivity extends AppCompatActivity implements MovieAdapter
         mMoviesList = new ArrayList<>();
 
         adapter = new MovieAdapter(WatchlistActivity.this,
-                WatchlistActivity.this, this, (ArrayList)mMoviesList);
+                WatchlistActivity.this, (ArrayList)mMoviesList);
 
         recyclerView.setAdapter(adapter);
 
@@ -102,26 +100,6 @@ public class WatchlistActivity extends AppCompatActivity implements MovieAdapter
         Intent intent = new Intent(WatchlistActivity.this, DetailActivity.class);
         intent.putExtra(DetailActivity.DETAIL_ACTIVITY_INTENT_KEY, movie);
         startActivity(intent);
-    }
-
-    @Override
-    public void onLongClick(Movie movie) {
-        if(movie.isSelected()) {
-            movie.setSelected(false);
-        }
-        else {
-            movie.setSelected(true);
-        }
-
-        for (Movie m : mMoviesList) {
-            if (m.isSelected()) {
-                stateSelected = true;
-                break;
-            }
-            stateSelected = false;
-        }
-        String state = "State: " + stateSelected;
-        Toast.makeText(this, state, Toast.LENGTH_SHORT).show();
     }
 
     @Override

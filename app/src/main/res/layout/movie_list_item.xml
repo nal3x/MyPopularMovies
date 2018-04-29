@@ -11,15 +11,6 @@
         android:scaleType="centerCrop"
         android:foreground="?android:selectableItemBackground"/>
 
-    <!--TODO: Delete if you disable the onLongClick selection-->
-
-    <View
-        android:id="@+id/selected_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/selected_overlay"
-        android:visibility="invisible" />
-
 </FrameLayout>
 
 

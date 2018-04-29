@@ -46,7 +46,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements ThumbnailAdapter.ThumbnailAdapterOnClickHandler {
 
     public final static String DETAIL_ACTIVITY_INTENT_KEY = "MOVIE_DETAILS";
     private final static String TAG = DetailActivity.class.getSimpleName();
@@ -104,25 +104,24 @@ public class DetailActivity extends AppCompatActivity {
         movieDescription.setText(mMovie.getOverview());
 
 
+        //setting up video thumbnail recyclerview
         mMovieVideos = new ArrayList<>();
-        thumbnailAdapter = new ThumbnailAdapter(this, (ArrayList)mMovieVideos);
+        thumbnailAdapter = new ThumbnailAdapter(this, this, (ArrayList)mMovieVideos);
         thumbnailsRecyclerView.setAdapter(thumbnailAdapter);
         LinearLayoutManager thumbnailsLayoutManager = new LinearLayoutManager(this,
                 LinearLayoutManager.HORIZONTAL,
                 false);
         thumbnailsRecyclerView.setLayoutManager(thumbnailsLayoutManager);
-        thumbnailsRecyclerView.setHasFixedSize(true);
+        thumbnailsRecyclerView.setHasFixedSize(false);
 
 
+        //setting up reviews recyclerview
         mMovieReviews = new ArrayList<>();
         reviewsAdapter = new ReviewsAdapter(this, (ArrayList)mMovieReviews);
         reviewsRecyclerView.setAdapter(reviewsAdapter);
         LinearLayoutManager reviewsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL,false);
         reviewsRecyclerView.setLayoutManager(reviewsLayoutManager);
-        reviewsRecyclerView.setHasFixedSize(true);
-
-
-
+        reviewsRecyclerView.setHasFixedSize(false);
 
         //Get reviews and videos for this movie using MovieDbService calls
         getMovieVideosFromInternet(mMovie.getId(), apiKey);
@@ -153,34 +152,29 @@ public class DetailActivity extends AppCompatActivity {
         /* Share menu item clicked */
         if (id == R.id.action_share) {
             Intent shareIntent = createShareIntent();
-            startActivity(shareIntent);
+            if (shareIntent.resolveActivity(getPackageManager()) != null) {
+                startActivity(shareIntent);
+            }
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-//    TODO: share video instead of original title (stage 2)
-
     // Create and return the Share Intent
     private Intent createShareIntent() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_TEXT, mMovie.getOriginalTitle());
+        String sharedUrl = "";
+        for (MovieVideoResult video : mMovieVideos) {
+            if (video.getType().equalsIgnoreCase("trailer") &&
+                    video.getSite().equalsIgnoreCase("youtube")) {
+                sharedUrl = NetworkUtils.buildYoutubeVideoURL(video.getKey()).toString();
+                break;
+            }
+        }
+        shareIntent.putExtra(Intent.EXTRA_TEXT, sharedUrl);
         return shareIntent;
-    }
-
-    // Sets new share Intent.
-    private void changeShareIntent(Intent shareIntent) {
-
-    }
-
-    private String formatYearReleased(String dateReleased) {
-        return dateReleased.substring(0, 4);
-    }
-
-    private String formatVoteAverage(String voteAverage) {
-        return voteAverage + "/10.0";
     }
 
     private void addMovieToWatchlist() {
@@ -227,10 +221,6 @@ public class DetailActivity extends AppCompatActivity {
             public void onResponse(Call<MovieVideos> call, Response<MovieVideos> response) {
                 if (null != response.body()) {
                     mMovieVideos.addAll(response.body().getResults());
-                    URL url = NetworkUtils.buildYoutubeVideoURL(mMovieVideos.get(0).getKey());
-                    Log.d("FIRST VIDEO URL", url.toString());
-                    URL url2 = NetworkUtils.buildYoutubeThumbnailUrl(mMovieVideos.get(0).getKey());
-                    Log.d("FIRST VIDEO THUMBNAIL", url2.toString());
                     thumbnailAdapter.notifyDataSetChanged();
                 }
             }
@@ -265,4 +255,24 @@ public class DetailActivity extends AppCompatActivity {
 
     }
 
+    //ThumbnailAdapter.ThumbnailAdapterOnClickHandler starts video when thumbnail is clicked
+    @Override
+    public void onClick(MovieVideoResult movieVideoResult) {
+        String videoKey = movieVideoResult.getKey();
+        URL url = NetworkUtils.buildYoutubeVideoURL(videoKey);
+        Intent startVideoIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.toString()));
+        //checking that there is an activity that can handle our intent
+        if (startVideoIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(startVideoIntent);
+        }
+    }
+
+    //helper methods to obtain year from date released and format vote average
+    private String formatYearReleased(String dateReleased) {
+        return dateReleased.substring(0, 4);
+    }
+
+    private String formatVoteAverage(String voteAverage) {
+        return voteAverage + "/10.0";
+    }
 }
