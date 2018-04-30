@@ -12,8 +12,8 @@
     <string name="divider_description">Divider</string>
     <string name="watchlist">My Watchlist</string>
     <string name="snackbar_action_undo">UNDO</string>
-    <string name="snackbar_failed_insert_text">Allready in Watchlist</string>
-    <string name="snackbar_success_insert_text">Added to Watchlist</string>
+    <string name="snackbar_failed_insert_text">Failed to add movie</string>
+    <string name="snackbar_success_insert_text">Movie added in Watchlist</string>
     <string name="clearWatchlist">Clear Watchlist</string>
     <string name="sortWatchlistRecent">Recently added</string>
     <string name="sortWatchlistRating">Highest rating</string>
@@ -21,5 +21,7 @@
     <string name="review_by">Review by:</string>
     <string name="read_more">...</string>
     <string name="nav_header_subtitle">Choose life. Choose movie.</string>
+    <string name="snackbar_success_delete_text">Movie deleted from Watchlist</string>
+    <string name="snackbar_failed_delete_text">Delete unsuccessful</string>
 
 </resources>

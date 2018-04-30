@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private final static String SORT_RECENTLY_ADDED = FavoriteMoviesContract.MovieEntry.COLUMN_TIME_ADDED + " DESC";
     private final static String SORT_BY_RATING = FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE + " DESC";
     private final static String DEFAULT_REGION = "GR"; //should normally be found in preferences...
-    //TODO: provide list of country codes for now playing/upcoming movies
     private List<Movie> mMoviesList;
     private int mLastPageLoaded; //assigned by the results fetched, used to inform the rv listener
     private MovieAdapter adapter;
@@ -89,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         //initially we fetch most popular movies page 1 and initialize scroll variables
         //while also hiding the menu
-
         WatchListMode = false;
         initializeScroll();
         mMovieSortingCriteria = SORT_BY_POPULARITY_KEY;
@@ -189,6 +187,17 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     }
 
 
+    /* When the user returns from the DetailActivity, a movie might have been deleted from or added
+     * to watchlist, so we have to update the watchlist.
+     */
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (WatchListMode)
+            loadData(SORT_RECENTLY_ADDED);
+        //TODO: save state!
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -281,6 +290,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         visibleThreshold = 100;
     }
 
+    //TODO: move to background thread
+
     private void loadData(String sortOrder) {
 
         mMoviesList.clear();
@@ -302,15 +313,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 String movieOriginalTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
                 String movieOverview = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_OVERVIEW));
 
+                //constructing a new movie object based on data in our db
                 Movie movieToAdd = new Movie(movieId, movieTitle, moviePoster, movieReleaseDate, movieVoteAverage, movieVoteCount,
                         movieOriginalTitle, movieOverview);
                 mMoviesList.add(movieToAdd);
             }
         }
         adapter.notifyDataSetChanged();
-
-
     }
-
 }
 

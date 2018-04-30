@@ -62,6 +62,22 @@ public class FavoriteMoviesContentProvider extends ContentProvider {
                         null,
                         sortOrder);
                 break;
+
+            case MOVIE_WITH_ID:
+                String id = uri.getPathSegments().get(1);
+                String mSelection = FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID + " = ? "; //movieId column
+                String[] mSelectionArgs = new String[]{id}; //a single ID as selection argument
+
+                returnedCursor = db.query(FavoriteMoviesContract.MovieEntry.TABLE_NAME,
+                        projection,
+                        mSelection,
+                        mSelectionArgs,
+                        null,
+                        null,
+                        null);
+
+                break;
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -69,7 +85,6 @@ public class FavoriteMoviesContentProvider extends ContentProvider {
         // Set a notification URI on the Cursor and return that Cursor
         returnedCursor.setNotificationUri(getContext().getContentResolver(), uri);
 
-        // Return constructed uri (this points to the newly inserted row of data)
         return returnedCursor;
     }
 
@@ -106,7 +121,35 @@ public class FavoriteMoviesContentProvider extends ContentProvider {
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
-        return 0;
+
+        final SQLiteDatabase db = mFavoriteMoviesDbHelper.getWritableDatabase();
+        int match = sUriMatcher.match(uri);
+        int numberOfRowsDeleted = 0;
+
+        switch (match) {
+            case MOVIES:
+                //To remove all rows and get a count pass "1" as the whereClause.
+                numberOfRowsDeleted = db.delete(FavoriteMoviesContract.MovieEntry.TABLE_NAME,
+                        "1",
+                        null);
+            case MOVIE_WITH_ID:
+                String id = uri.getPathSegments().get(1);
+                String mSelection = FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID + " = ? ";
+                String[] mSelectionArgs = new String[]{id};
+
+                numberOfRowsDeleted = db.delete(FavoriteMoviesContract.MovieEntry.TABLE_NAME,
+                        mSelection,
+                        mSelectionArgs);
+                break;
+
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+
+        if (numberOfRowsDeleted != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return numberOfRowsDeleted;
     }
 
     @Override

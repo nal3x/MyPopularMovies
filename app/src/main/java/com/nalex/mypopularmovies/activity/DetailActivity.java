@@ -3,6 +3,7 @@ package com.nalex.mypopularmovies.activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -20,7 +21,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.nalex.mypopularmovies.R;
 import com.nalex.mypopularmovies.adapter.ReviewsAdapter;
@@ -49,6 +49,8 @@ import retrofit2.Response;
 public class DetailActivity extends AppCompatActivity implements ThumbnailAdapter.ThumbnailAdapterOnClickHandler {
 
     public final static String DETAIL_ACTIVITY_INTENT_KEY = "MOVIE_DETAILS";
+    private final static String FAB_ICON_FOR_SAVED_MOVIE = "SAVED";
+    private final static String FAB_ICON_FOR_UNSAVED_MOVIE = "UNSAVED";
     private final static String TAG = DetailActivity.class.getSimpleName();
     private Movie mMovie;
     private List<MovieVideoResult> mMovieVideos;
@@ -103,6 +105,24 @@ public class DetailActivity extends AppCompatActivity implements ThumbnailAdapte
         originalTitle.setText(getString(R.string.original_title) + "\n" + mMovie.getOriginalTitle());
         movieDescription.setText(mMovie.getOverview());
 
+        initializeFabIcon();
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isMovieInWatclist()) {
+                    boolean successfulyDeleted = deleteMovieFromWatchlist();
+                    if (successfulyDeleted)
+                        setFabIconState(FAB_ICON_FOR_UNSAVED_MOVIE);
+                }
+                else { //if not, add movie to watchlist and update fab
+                    boolean successfullyAdded = addMovieToWatchlist();
+                    if (successfullyAdded)
+                        setFabIconState(FAB_ICON_FOR_SAVED_MOVIE);
+                }
+            }
+        });
+
 
         //setting up video thumbnail recyclerview
         mMovieVideos = new ArrayList<>();
@@ -126,13 +146,6 @@ public class DetailActivity extends AppCompatActivity implements ThumbnailAdapte
         //Get reviews and videos for this movie using MovieDbService calls
         getMovieVideosFromInternet(mMovie.getId(), apiKey);
         getMovieReviewsFromInternet(mMovie.getId(), apiKey, this);
-
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                addMovieToWatchlist();
-            }
-        });
 
     }
 
@@ -177,7 +190,66 @@ public class DetailActivity extends AppCompatActivity implements ThumbnailAdapte
         return shareIntent;
     }
 
-    private void addMovieToWatchlist() {
+    /*  Helper method to set the fab icon when user enters detail activity.
+     *  Requires a lookup at the provider. Uses isMovieInWatchlist.
+     */
+    private void initializeFabIcon() {
+        if (isMovieInWatclist()) {
+            setFabIconState(FAB_ICON_FOR_SAVED_MOVIE);
+        }
+        else
+            setFabIconState(FAB_ICON_FOR_UNSAVED_MOVIE);
+    }
+
+    // Helper method to set the proper fab icon
+    private void setFabIconState (String fabState) {
+        if (fabState.equals(FAB_ICON_FOR_SAVED_MOVIE)) {
+            fab.setImageResource(R.drawable.ic_star_black_24px);
+        }
+        else
+            fab.setImageResource(R.drawable.ic_star_border_black_24dp);
+    }
+
+    // method which queries the content resolver for a single movie based on it's ID.
+    private boolean isMovieInWatclist() {
+
+        //constructing the proper uri based on movie id
+        Uri uri = FavoriteMoviesContract.MovieEntry.buildMovieUriWithId(mMovie.getId());
+
+        Cursor retCursor = getContentResolver().query(uri,
+                null,
+                null,
+                null,
+                null);
+
+        //we can't use the notification uri to identify if movie is present in the Watchlist DB
+        boolean movieFound = false;
+        if (retCursor != null && retCursor.moveToFirst()) //we have valid data
+            movieFound = true;
+
+        return movieFound;
+
+    }
+
+    //Method to remove a movie from the Watchlist.
+    private boolean deleteMovieFromWatchlist() {
+
+        Uri uri = FavoriteMoviesContract.MovieEntry.buildMovieUriWithId(mMovie.getId());
+        //resolver returns # of movies deleted
+        int deletedMovies = getContentResolver().delete(uri, null, null);
+
+        if (deletedMovies == 1) {
+            Snackbar.make(coordinatorLayout, R.string.snackbar_success_delete_text, Snackbar.LENGTH_LONG).show();
+            return true;
+        }
+        else {
+            Snackbar.make(coordinatorLayout, R.string.snackbar_failed_delete_text, Snackbar.LENGTH_LONG).show();
+            return false;
+        }
+
+    }
+
+    private boolean addMovieToWatchlist() {
 
         ContentValues cv = new ContentValues();
 
@@ -193,21 +265,13 @@ public class DetailActivity extends AppCompatActivity implements ThumbnailAdapte
         Uri uri = getContentResolver().insert(FavoriteMoviesContract.MovieEntry.CONTENT_URI, cv);
 
         if (uri != null) {
-            Log.d(TAG, uri.toString());
-            Snackbar.make(coordinatorLayout, R.string.snackbar_success_insert_text, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.snackbar_action_undo, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Toast.makeText(getBaseContext(),
-                                    "Implement delete based on uri returned ;)",
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    })
-                    .show();
+            Snackbar.make(coordinatorLayout, R.string.snackbar_success_insert_text, Snackbar.LENGTH_LONG).show();
+            return true;
         }
         else {
             Snackbar.make(coordinatorLayout, R.string.snackbar_failed_insert_text, Snackbar.LENGTH_LONG)
                     .show();
+            return false;
         }
     }
 
@@ -276,3 +340,4 @@ public class DetailActivity extends AppCompatActivity implements ThumbnailAdapte
         return voteAverage + "/10.0";
     }
 }
+
