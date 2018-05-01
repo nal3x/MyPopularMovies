@@ -28,7 +28,6 @@
         android:id="@+id/menu_bottom"
         android:checkableBehavior="single">
         <item
-            android:checkable="false"
             android:id="@+id/watchlist"
             android:title="@string/watchlist">
         </item>
