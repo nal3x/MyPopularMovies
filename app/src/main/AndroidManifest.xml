@@ -26,6 +26,10 @@
             android:parentActivityName=".activity.MainActivity"
             />
 
+        <activity android:name=".activity.WatchListActivity"
+            android:parentActivityName=".activity.MainActivity"
+            />
+
         <!-- exported = false limits access to this ContentProvider to only this app -->
         <provider
             android:name="com.nalex.mypopularmovies.data.FavoriteMoviesContentProvider"

@@ -10,7 +10,7 @@
     <string name="votes_string">votes</string>
     <string name="original_title">Original Title:</string>
     <string name="divider_description">Divider</string>
-    <string name="watchlist">My Watchlist</string>
+    <string name="watchlist_title">My Watchlist</string>
     <string name="snackbar_action_undo">UNDO</string>
     <string name="snackbar_failed_insert_text">Failed to add movie</string>
     <string name="snackbar_success_insert_text">Movie added in Watchlist</string>

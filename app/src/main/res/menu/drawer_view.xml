@@ -29,7 +29,7 @@
         android:checkableBehavior="single">
         <item
             android:id="@+id/watchlist"
-            android:title="@string/watchlist">
+            android:title="@string/watchlist_title">
         </item>
     </group>
 
