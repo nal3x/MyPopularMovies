@@ -5,6 +5,8 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -13,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -32,16 +35,17 @@ import butterknife.ButterKnife;
 public class WatchListActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler,
         LoaderManager.LoaderCallbacks<ArrayList<Movie>> {
 
-    private List<Movie> mMoviesList;
+    private List<Movie> mWatchList;
     private MovieAdapter adapter;
     private static final int MOVIE_LOADER_ID = 0;
-    private final static String LOADER_BUNDLE_SORT_ORDER_KEY = "SORT_ORDER";
+    private final static String LOADER_BUNDLE_KEY = "LOADER_KEY";
     //constants used to sort WatchList
     private final static String SORT_RECENTLY_ADDED = FavoriteMoviesContract.MovieEntry.COLUMN_TIME_ADDED + " DESC";
     private final static String SORT_BY_RATING = FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE + " DESC";
 
     @BindView(R.id.main_toolbar) Toolbar myToolbar;
     @BindView(R.id.rv_movies) RecyclerView recyclerView;
+    @BindView(R.id.watchlist_constraint_layout) ConstraintLayout constraintLayout;
     @BindInt(R.integer.num_of_cols) int numberOfColumns;
 
     @Override
@@ -57,18 +61,16 @@ public class WatchListActivity extends AppCompatActivity implements MovieAdapter
             supportActionBar.setTitle(R.string.watchlist_title);
         }
 
-        mMoviesList = new ArrayList<>();
-
-        adapter = new MovieAdapter(WatchListActivity.this, WatchListActivity.this, (ArrayList)mMoviesList);
-
+        mWatchList = new ArrayList<>();
+        adapter = new MovieAdapter(WatchListActivity.this, WatchListActivity.this, (ArrayList) mWatchList);
         recyclerView.setAdapter(adapter);
         final GridLayoutManager layoutManager = new GridLayoutManager(this, numberOfColumns);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
 
-        Bundle sortOrderBundle = new Bundle();
-        sortOrderBundle.putString(LOADER_BUNDLE_SORT_ORDER_KEY, SORT_RECENTLY_ADDED);
-        getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, sortOrderBundle, this);
+        Bundle bundle = new Bundle();
+        bundle.putString(LOADER_BUNDLE_KEY, SORT_RECENTLY_ADDED);
+        getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, bundle, this);
 
     }
 
@@ -91,36 +93,34 @@ public class WatchListActivity extends AppCompatActivity implements MovieAdapter
         int id = item.getItemId();
         switch (id) {
             case R.id.sortWatchlistRecent: {
-                Bundle sortOrderBundle = new Bundle();
-                sortOrderBundle.putString(LOADER_BUNDLE_SORT_ORDER_KEY, SORT_RECENTLY_ADDED);
-                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, sortOrderBundle, this);
+                Bundle bundle = new Bundle();
+                bundle.putString(LOADER_BUNDLE_KEY, SORT_RECENTLY_ADDED);
+                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, bundle, this);
                 return true;
             }
             case R.id.sortWatchlistRating: {
-                Bundle sortOrderBundle = new Bundle();
-                sortOrderBundle.putString(LOADER_BUNDLE_SORT_ORDER_KEY, SORT_BY_RATING);
-                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, sortOrderBundle, this);
+                Bundle bundle = new Bundle();
+                bundle.putString(LOADER_BUNDLE_KEY, SORT_BY_RATING);
+                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, bundle, this);
                 return true;
             }
-            //TODO: mass delete by R.id.clearWatchlist
+            case R.id.clearWatchlist: {
+                //passing null as the bundle args will delete the watchlist
+                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
+                return true;
+            }
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-        /* Using a Loader to load Watchlist in a background thread. When user enters WatchList mode for one time
-     * and then enters DetailActivity, then the Back button always showed the WatchList (even if user has entered
-     * Detail while viewing endpoint). This means that once a Loader is started, then a lifecycle callback (onRestart?)
-     * called onLoadFinished again. Thus, in the onLoadFinished callback we have to destroy our loader.
-     * PROBLEM: back button does not show UPDATED WatchList!!!!
-     */
-
+    // Using a Loader to load the contents or delete the Watchlist in a background thread.
     @Override
     public Loader<ArrayList<Movie>> onCreateLoader(int id, @Nullable final Bundle args) {
 
         return new AsyncTaskLoader<ArrayList<Movie>>(this) {
             //Member which will store our results
-            private ArrayList<Movie> mWatchList = new ArrayList<>();
+            private ArrayList<Movie> mMoviesList = new ArrayList<>();
 
             @Override
             protected void onStartLoading() {
@@ -130,39 +130,47 @@ public class WatchListActivity extends AppCompatActivity implements MovieAdapter
             @Override
             public ArrayList<Movie> loadInBackground() {
 
-                String sortOrder = args.getString(LOADER_BUNDLE_SORT_ORDER_KEY);
+                if (args == null) { //delete watchlist
+                    int itemsDeleted = getContentResolver().delete(FavoriteMoviesContract.MovieEntry.CONTENT_URI,
+                            null,
+                            null);
+                    String snackBarString = String.valueOf(itemsDeleted);
+                    snackBarString += " " + getString(R.string.snackbar_success_mass_delete_text);
+                    Snackbar.make(constraintLayout, snackBarString, Snackbar.LENGTH_LONG).show();
+                    //returning an empty ArrayList as a result for our adapter
+                    return new ArrayList<>();
+                } else { //sort watchlist dependig on args content
+                    String sortOrder = args.getString(LOADER_BUNDLE_KEY);
+                    ArrayList<Movie> movies = new ArrayList<>();
+                    //try-with-resources to autoclose Cursor
+                    try (Cursor cursor = getContentResolver().query(FavoriteMoviesContract.MovieEntry.CONTENT_URI,
+                            null,
+                            null,
+                            null,
+                            sortOrder)) {
 
-                ArrayList<Movie> movies = new ArrayList<>();
-
-                //try-with-resources to autoclose Cursor
-                try (Cursor cursor = getContentResolver().query(FavoriteMoviesContract.MovieEntry.CONTENT_URI,
-                        null,
-                        null,
-                        null,
-                        sortOrder)) {
-
-                    while (cursor.moveToNext()) {
-                        int movieId = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID));
-                        String movieTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE));
-                        String moviePoster = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_POSTER));
-                        String movieReleaseDate = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_RELEASE_DATE));
-                        float movieVoteAverage = cursor.getFloat(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE));
-                        int movieVoteCount = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_COUNT));
-                        String movieOriginalTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
-                        String movieOverview = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_OVERVIEW));
-                        //constructing a new movie object based on data in our db
-                        Movie movieToAdd = new Movie(movieId, movieTitle, moviePoster, movieReleaseDate, movieVoteAverage, movieVoteCount,
-                                movieOriginalTitle, movieOverview);
-                        movies.add(movieToAdd);
+                        while (cursor.moveToNext()) {
+                            int movieId = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID));
+                            String movieTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_TITLE));
+                            String moviePoster = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_POSTER));
+                            String movieReleaseDate = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_RELEASE_DATE));
+                            float movieVoteAverage = cursor.getFloat(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE));
+                            int movieVoteCount = cursor.getInt(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_COUNT));
+                            String movieOriginalTitle = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
+                            String movieOverview = cursor.getString(cursor.getColumnIndex(FavoriteMoviesContract.MovieEntry.COLUMN_OVERVIEW));
+                            //constructing a new movie object based on data in our db
+                            Movie movieToAdd = new Movie(movieId, movieTitle, moviePoster, movieReleaseDate, movieVoteAverage, movieVoteCount,
+                                    movieOriginalTitle, movieOverview);
+                            movies.add(movieToAdd);
+                        }
                     }
+                    return movies;
                 }
-                return movies;
             }
-
             @Override
             public void deliverResult(@Nullable ArrayList<Movie> data) {
-                mWatchList.clear();
-                mWatchList.addAll(data);
+                mMoviesList.clear();
+                mMoviesList.addAll(data);
                 super.deliverResult(data);
             }
         };
@@ -171,12 +179,10 @@ public class WatchListActivity extends AppCompatActivity implements MovieAdapter
     @Override
     public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
         if (null != data) {
-            mMoviesList.clear();
-            mMoviesList.addAll(data);
+            mWatchList.clear();
+            mWatchList.addAll(data);
             adapter.notifyDataSetChanged();
         }
-        else
-            return;
     }
 
     @Override

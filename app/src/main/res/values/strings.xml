@@ -23,5 +23,6 @@
     <string name="nav_header_subtitle">Choose life. Choose movie.</string>
     <string name="snackbar_success_delete_text">Movie deleted from Watchlist</string>
     <string name="snackbar_failed_delete_text">Delete unsuccessful</string>
+    <string name="snackbar_success_mass_delete_text">items deleted successfully</string>
 
 </resources>

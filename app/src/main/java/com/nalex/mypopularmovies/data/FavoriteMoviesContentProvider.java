@@ -124,7 +124,7 @@ public class FavoriteMoviesContentProvider extends ContentProvider {
 
         final SQLiteDatabase db = mFavoriteMoviesDbHelper.getWritableDatabase();
         int match = sUriMatcher.match(uri);
-        int numberOfRowsDeleted = 0;
+        int numberOfRowsDeleted;
 
         switch (match) {
             case MOVIES:
@@ -132,6 +132,7 @@ public class FavoriteMoviesContentProvider extends ContentProvider {
                 numberOfRowsDeleted = db.delete(FavoriteMoviesContract.MovieEntry.TABLE_NAME,
                         "1",
                         null);
+                break;
             case MOVIE_WITH_ID:
                 String id = uri.getPathSegments().get(1);
                 String mSelection = FavoriteMoviesContract.MovieEntry.COLUMN_MOVIE_ID + " = ? ";
