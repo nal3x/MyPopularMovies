@@ -16,7 +16,6 @@ import com.squareup.picasso.Picasso;
 import java.net.URL;
 import java.util.ArrayList;
 
-//TODO: (future work) check if adapter is confused by filtering the utube videos
 
 public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.ThumbnailViewHolder> {
 

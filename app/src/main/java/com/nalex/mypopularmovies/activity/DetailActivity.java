@@ -102,7 +102,7 @@ public class DetailActivity extends AppCompatActivity implements ThumbnailAdapte
         String votesString = getString(R.string.votes_string);
         String voteCount = Integer.toString(mMovie.getVoteCount());
         totalVotes.setText(voteCount + " " + votesString);
-        originalTitle.setText(getString(R.string.original_title) + "\n" + mMovie.getOriginalTitle());
+        originalTitle.setText(getString(R.string.original_title) + " " + mMovie.getOriginalTitle());
         movieDescription.setText(mMovie.getOverview());
 
         initializeFabIcon();
@@ -226,6 +226,8 @@ public class DetailActivity extends AppCompatActivity implements ThumbnailAdapte
         boolean movieFound = false;
         if (retCursor != null && retCursor.moveToFirst()) //we have valid data
             movieFound = true;
+
+        retCursor.close();
 
         return movieFound;
 

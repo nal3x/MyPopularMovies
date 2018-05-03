@@ -32,7 +32,6 @@ import butterknife.ButterKnife;
 public class WatchListActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler,
         LoaderManager.LoaderCallbacks<ArrayList<Movie>> {
 
-    //TODO: IMPLEMENT BACK BUTTON
     private List<Movie> mMoviesList;
     private MovieAdapter adapter;
     private static final int MOVIE_LOADER_ID = 0;
@@ -175,7 +174,6 @@ public class WatchListActivity extends AppCompatActivity implements MovieAdapter
             mMoviesList.clear();
             mMoviesList.addAll(data);
             adapter.notifyDataSetChanged();
-//            getSupportLoaderManager().destroyLoader(MOVIE_LOADER_ID); //TODO: DO NOT DESTROY
         }
         else
             return;
