@@ -1,19 +1,6 @@
-Contributions
+Created as a part of [Udacity Android Developer Nanodegree Program](https://www.udacity.com/course/android-developer-nanodegree-by-google--nd801).
 
-Android Studio, how to prevent your Sensitive Data (like API keys) from publishing on GitHub repos
-https://medium.com/@georgevrynios/android-studio-how-to-prevent-your-sensitive-data-like-api-keys-from-publishing-on-github-repos-fb29af482952
+Uses [Retrofit HTTP client](http://square.github.io/retrofit/)
+and [EndlessRecyclerOnScrollListener](https://gist.github.com/ssinss/e06f12ef66c51252563e) by ssinss
 
-Retrofit Android Example Tutorial by Anupam Chugh
-https://www.journaldev.com/13639/retrofit-android-example-tutorial
-
-Android Retrofit 2.0 Tutorial by Navjacinth Mathew
-https://medium.com/@jacinth9/android-retrofit-2-0-tutorial-89de3c714c63
-
-Thanks to LaurenM for helping me solve fit issues of single item ImageView in the GridLayout of the RecyclerView, and for providing me with this hint
-https://discussions.udacity.com/t/gridlayoutmanager-recyclerview/499251/4
-
-EndlessRecyclerOnScrollListener by ssinss:
-https://gist.github.com/ssinss/e06f12ef66c51252563e
-
-For expanding/shrinking the user reviews:
-https://android.jlelse.eu/android-handling-checkbox-state-in-recycler-views-71b03f237022
+Some [screenshots](https://drive.google.com/drive/folders/1RpEW1ay0vLrOEGD1zQAojSppTsf1oSaZ?usp=sharing)
